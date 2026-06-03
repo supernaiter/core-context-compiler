@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-04T08:34:00+09:00
+updated: 2026-06-04T08:36:00+09:00
 goal: Evaluate Core Context Compiler beyond MVP
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -88,5 +88,8 @@ done:
 - verification: uv run python scripts/run_eval_gauntlet.py --dataset synthetic_v2 --out reports/v0.2_eval_gauntlet passed
 - verification: uv run ruff check . passed
 - verification: uv run pytest passed
+- commit: d618fb8
+- GitHub CI run 26919256945 success
+- GitHub Issue #22 closed with verification
 next:
-- commit and push
+- await review or merge
