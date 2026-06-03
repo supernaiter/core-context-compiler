@@ -30,7 +30,6 @@ done:
 - ruff passed
 - pytest passed
 - synthetic eval passed
+- commit: eb1dcba
 next:
-- git commit
-- push main
 - write GitHub issue results
