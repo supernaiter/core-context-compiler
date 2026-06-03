@@ -59,3 +59,27 @@ The current focus is proving when compiled core context wins or fails:
 - pointer / temporal / salience / recall ablations
 - hardened synthetic cases with distractors, stale facts, ambiguity, unknowns, and poisoning
 - LongMemEval-S subset adapter scaffold
+
+## v0.2 Evaluation
+
+Run the gauntlet:
+
+```bash
+uv run python scripts/run_eval_gauntlet.py --dataset synthetic_v2 --out reports/v0.2_eval_gauntlet
+```
+
+Verify:
+
+```bash
+uv run pytest
+uv run ruff check .
+```
+
+Read `reports/v0.2_eval_gauntlet/summary.md` first. It states whether `compressed_core_plus_recall` beats `naive_rag`, where it loses, the best budget, the best representation, the top failure modes, and the next implementation task.
+
+Current limitations:
+
+- `synthetic_v2` is deterministic and mock-driven.
+- LongMemEval scoring is not part of v0.2.
+- Latency is local runner latency, not external LLM latency.
+- Reports are generated locally and are not CI artifacts yet.

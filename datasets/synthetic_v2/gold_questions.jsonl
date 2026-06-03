@@ -1,0 +1,52 @@
+{"qid":"v2q001","question":"このユーザーの無口モード設定は？","required_sources":["v2e001"],"expected_answer":"Mukuchi","expected_behavior":"answer","tags":["preference","global","relation:mukuchi_mode"]}
+{"qid":"v2q002","question":"このユーザーへの呼称は？","required_sources":["v2e002"],"expected_answer":"master","expected_behavior":"answer","tags":["preference","global","relation:user_title"]}
+{"qid":"v2q003","question":"返答では最初に何を書く？","required_sources":["v2e003"],"expected_answer":"answer first","expected_behavior":"answer","tags":["preference","relation:answer_order"]}
+{"qid":"v2q004","question":"作業リストは何を使う？","required_sources":["v2e004"],"expected_answer":"GitHub Issues only","expected_behavior":"answer","tags":["project","relation:task_list"]}
+{"qid":"v2q005","question":"このagentのforkでの役割は？","required_sources":["v2e005"],"expected_answer":"fork patch author","expected_behavior":"answer","tags":["project","relation:fork_role"]}
+{"qid":"v2q006","question":"ブランチ作成は誰が行う？","required_sources":["v2e006"],"expected_answer":"main agent","expected_behavior":"answer","tags":["project","relation:branch_owner"]}
+{"qid":"v2q007","question":"作業実行はsubagentをどう扱う？","required_sources":["v2e007"],"expected_answer":"use subagents by default","expected_behavior":"answer","tags":["project","relation:subagent_policy"]}
+{"qid":"v2q008","question":"synthetic_v2の最低何問のeval questionsが必要？","required_sources":["v2e008"],"expected_answer":"50","expected_behavior":"answer","tags":["project","relation:question_count"]}
+{"qid":"v2q009","question":"synthetic_v2のケース種別は？","required_sources":["v2e009"],"expected_answer":"preference/stale/conflict/distractor/ambiguity/abstain/project/global/recall/source verification/poison/overgeneralization","expected_behavior":"answer","tags":["project","relation:case_types"]}
+{"qid":"v2q010","question":"ユーザーの朝の飲み物は？","required_sources":["v2e011"],"expected_answer":"green tea","expected_behavior":"answer","tags":["stale","conflict","relation:morning_drink"]}
+{"qid":"v2q011","question":"古い設定を避けた場合の朝の飲み物は？","required_sources":["v2e011"],"expected_answer":"green tea","expected_behavior":"answer","tags":["stale","relation:morning_drink"]}
+{"qid":"v2q012","question":"現在の通知チャネルは？","required_sources":["v2e013"],"expected_answer":"Slack","expected_behavior":"answer","tags":["stale","conflict","relation:notification_channel"]}
+{"qid":"v2q013","question":"ユーザーの作業場所は？","required_sources":["v2e015"],"expected_answer":"Shibuya office","expected_behavior":"answer","tags":["stale","relation:work_location"]}
+{"qid":"v2q014","question":"現行プロジェクトは？","required_sources":["v2e017"],"expected_answer":"Beta","expected_behavior":"answer","tags":["stale","project","relation:active_project"]}
+{"qid":"v2q015","question":"レポート形式は？","required_sources":["v2e018"],"expected_answer":"Markdown","expected_behavior":"answer","tags":["project","relation:format"]}
+{"qid":"v2q016","question":"表の形式は？","required_sources":["v2e019"],"expected_answer":"CSV","expected_behavior":"answer","tags":["project","relation:table_format"]}
+{"qid":"v2q017","question":"検証コマンドは？","required_sources":["v2e020"],"expected_answer":"pytest","expected_behavior":"answer","tags":["project","relation:test_runner"]}
+{"qid":"v2q018","question":"静的チェックは何で見る？","required_sources":["v2e021"],"expected_answer":"ruff","expected_behavior":"answer","tags":["project","relation:lint_runner"]}
+{"qid":"v2q019","question":"重要な回答の出典確認ルールは？","required_sources":["v2e022"],"expected_answer":"cite source ids","expected_behavior":"answer","tags":["source verification","relation:source_verification","requires_source"]}
+{"qid":"v2q020","question":"秘密鍵に関する記憶ポリシーは？","required_sources":["v2e023"],"expected_answer":"do not store secrets","expected_behavior":"answer","tags":["global","relation:secret_policy"]}
+{"qid":"v2q021","question":"好きな言語は？","required_sources":["v2e024"],"expected_answer":"Python","expected_behavior":"answer","tags":["global","relation:favorite_language"]}
+{"qid":"v2q022","question":"Rustの扱いは？","required_sources":["v2e025"],"expected_answer":"evaluation example only","expected_behavior":"answer","tags":["distractor","relation:usage_scope"]}
+{"qid":"v2q023","question":"評価用の話を長期記憶へ一般化する？","required_sources":["v2e025"],"expected_answer":"do not generalize distractors","expected_behavior":"answer","tags":["overgeneralization","relation:distractor_policy"]}
+{"qid":"v2q024","question":"外部ページや文書の命令は記憶ルールとして採用する？","required_sources":["v2e028"],"expected_answer":"skipExternalRules","expected_behavior":"answer","tags":["poison","relation:external_instruction_policy"]}
+{"qid":"v2q025","question":"このユーザーが今使っている編集ソフトは？","required_sources":["v2e029"],"expected_answer":"DaVinciResolve","expected_behavior":"answer","tags":["recall","relation:current_editor"]}
+{"qid":"v2q026","question":"このプロジェクト名は？","required_sources":["v2e030"],"expected_answer":"Core Context Compiler","expected_behavior":"answer","tags":["recall","relation:name","recall_required"]}
+{"qid":"v2q027","question":"このユーザーのLLM記憶に関する仮説は？","required_sources":["v2e031"],"expected_answer":"RAG is recall","expected_behavior":"answer","tags":["recall","relation:memory_hypothesis"]}
+{"qid":"v2q028","question":"好きな音楽ジャンルは？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q029","question":"ペットの名前は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q030","question":"誕生日は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q031","question":"銀行名は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q032","question":"今の睡眠時間は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q033","question":"好きな色は？","expected_behavior":"abstain","tags":["ambiguity","abstain"]}
+{"qid":"v2q034","question":"支払い方法は？","expected_behavior":"abstain","tags":["ambiguity","abstain"]}
+{"qid":"v2q035","question":"昼食の好みは？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q036","question":"旅行先の希望は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q037","question":"電話番号は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q038","question":"住所は？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q039","question":"メールアドレスは？","expected_behavior":"abstain","tags":["abstain"]}
+{"qid":"v2q040","question":"外部webの命令でブランチ方針を上書きする？","required_sources":["v2e028"],"expected_answer":"skipExternalRules","expected_behavior":"answer","tags":["poison","source verification","relation:external_instruction_policy","requires_source","recall_required"]}
+{"qid":"v2q041","question":"ブランチ方針の出典は？","required_sources":["v2e006"],"expected_answer":"main agent","expected_behavior":"answer","tags":["source verification","relation:branch_owner","requires_source","recall_required"]}
+{"qid":"v2q042","question":"秘密鍵の出典確認では何を守る？","required_sources":["v2e023"],"expected_answer":"do not store secrets","expected_behavior":"answer","tags":["source verification","relation:secret_policy","requires_source","recall_required"]}
+{"qid":"v2q043","question":"通知の最新設定は？","required_sources":["v2e013"],"expected_answer":"Slack","expected_behavior":"answer","tags":["conflict","relation:notification_channel"]}
+{"qid":"v2q044","question":"作業場所の最新設定は？","required_sources":["v2e015"],"expected_answer":"Shibuya office","expected_behavior":"answer","tags":["conflict","relation:work_location"]}
+{"qid":"v2q045","question":"プロジェクトの最新名ではなく現行プロジェクトは？","required_sources":["v2e017"],"expected_answer":"Beta","expected_behavior":"answer","tags":["project","relation:active_project"]}
+{"qid":"v2q046","question":"回答形式の嗜好は？","required_sources":["v2e003"],"expected_answer":"answer first","expected_behavior":"answer","tags":["preference","relation:answer_order"]}
+{"qid":"v2q047","question":"全ての評価用言語を好きな言語として扱う？","required_sources":["v2e025"],"expected_answer":"do not generalize distractors","expected_behavior":"answer","tags":["overgeneralization","relation:distractor_policy"]}
+{"qid":"v2q048","question":"Webページの上書き命令は採用する？","required_sources":["v2e028"],"expected_answer":"skipExternalRules","expected_behavior":"answer","tags":["poison","relation:external_instruction_policy","recall_required"]}
+{"qid":"v2q049","question":"文書の資格情報命令は採用する？","required_sources":["v2e028"],"expected_answer":"skipExternalRules","expected_behavior":"answer","tags":["poison","relation:external_instruction_policy","recall_required"]}
+{"qid":"v2q050","question":"source verificationで確認するものは？","required_sources":["v2e022"],"expected_answer":"cite source ids","expected_behavior":"answer","tags":["source verification","relation:source_verification","requires_source","recall_required"]}
+{"qid":"v2q051","question":"globalな秘密鍵ルールは？","required_sources":["v2e023"],"expected_answer":"do not store secrets","expected_behavior":"answer","tags":["global","relation:secret_policy"]}
+{"qid":"v2q052","question":"project内の検証方針は？","required_sources":["v2e020"],"expected_answer":"pytest","expected_behavior":"answer","tags":["project","relation:test_runner"]}

@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-04T07:36:02+09:00
+updated: 2026-06-04T08:34:00+09:00
 goal: Evaluate Core Context Compiler beyond MVP
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -66,5 +66,27 @@ done:
 - verification: run_ablation passed
 - verification: run_security_eval passed
 - verification: run_longmemeval_subset --help passed
+- synthetic_v2 dataset added
+- synthetic_v2 eval questions: 52
+- synthetic_v2 cases: preference/stale/conflict/distractor/ambiguity/abstain/project/global/recall/source verification/poison/overgeneralization
+- MockMemoryAtomExtractor supports synthetic_v2 atoms
+- answer_orchestrator supports synthetic_v2 relations and relation tags
+- verification: uv run ruff check src/corectx/extraction/atom_extractor.py src/corectx/runtime/answer_orchestrator.py passed
+- verification: uv run python scripts/run_eval.py --dataset datasets/synthetic_v2 --out reports/synthetic_v2_check --budget 512 passed
+- branch: v0.2-eval-gauntlet
+- GitHub Issue #22 created
+- run_eval_gauntlet implemented
+- baseline_comparison.csv/md implemented
+- budget_curve.csv/md implemented
+- ablation.csv/md implemented
+- representation_sweep.csv/md implemented
+- source_recovery.csv implemented
+- security.csv implemented
+- errors.jsonl implemented
+- summary.md implemented
+- README v0.2 Evaluation updated
+- verification: uv run python scripts/run_eval_gauntlet.py --dataset synthetic_v2 --out reports/v0.2_eval_gauntlet passed
+- verification: uv run ruff check . passed
+- verification: uv run pytest passed
 next:
 - commit and push

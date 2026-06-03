@@ -1,0 +1,1 @@
+{"id":"gold_v2_min_questions","kind":"constraint","subject":"synthetic_v2","relation":"minimum_eval_questions","value":"50","scope":"project","confidence":0.95,"importance":0.9,"stability":0.8,"source_ids":["v2e008"],"evidence_spans":[]}
