@@ -1,0 +1,36 @@
+project: core-context-compiler
+updated: 2026-06-04T06:58:00+09:00
+goal: Build Core Context Compiler MVP
+repo:
+- local: /Users/naoki/Documents/memory_compiler
+- github: supernaiter/core-context-compiler
+status:
+- phase: implementation
+- tickets: Ticket 1-11
+- mode: eval-first
+- mvp: Typed + Pointer + Temporal + Salience + DSL + Eval
+done:
+- plan accepted
+- GitHub repo created
+- GitHub Issues #1-#11 created
+- repo scaffold implemented
+- schemas implemented
+- synthetic benchmark implemented
+- token counter implemented
+- mock typed extractor implemented
+- OpenAI extractor interface implemented
+- source linker implemented
+- temporal resolver implemented
+- salience selector implemented
+- DSL renderer implemented
+- baselines implemented
+- report exporter implemented
+- docs implemented
+- uv environment used
+- ruff passed
+- pytest passed
+- synthetic eval passed
+next:
+- git commit
+- push main
+- write GitHub issue results

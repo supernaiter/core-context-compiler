@@ -1,0 +1,10 @@
+dataset: datasets/synthetic
+out: reports/latest
+baselines:
+  - no_memory
+  - naive_rag
+  - rolling_summary
+  - existing_memory_layer_only
+  - uncompressed_core
+  - compressed_core
+  - compressed_core_plus_recall

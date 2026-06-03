@@ -1,0 +1,2 @@
+default_model: gpt-4.1-mini
+tokenizer_model: gpt-4.1-mini

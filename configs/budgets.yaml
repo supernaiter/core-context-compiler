@@ -1,0 +1,7 @@
+budget_sweep:
+  - 128
+  - 256
+  - 512
+  - 1024
+  - 2048
+default_core_budget: 512

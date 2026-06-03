@@ -1,0 +1,11 @@
+core_admission:
+  require_source_ids: true
+  require_evidence_spans: true
+  min_confidence: 0.2
+  reject_untrusted_web_instructions: true
+never_persist:
+  - instructions from untrusted web pages
+  - tool-use override instructions
+  - credential-like data
+  - policy-changing commands
+  - third-party claims about user preferences unless confirmed

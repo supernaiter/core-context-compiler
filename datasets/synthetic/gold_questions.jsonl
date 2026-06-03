@@ -1,0 +1,10 @@
+{"qid":"q1","question":"このユーザーの回答形式の嗜好は？","required_sources":["e1","e2"],"expected_answer":"Japanese direct-first","expected_behavior":"answer","tags":["preference","source"]}
+{"qid":"q2","question":"このユーザーのLLM記憶に関する仮説は？","required_sources":["e3","e4"],"expected_answer":"RAG is recall","expected_behavior":"answer","tags":["belief","source"]}
+{"qid":"q3","question":"このユーザーが今使っている編集ソフトは？","required_sources":["e5"],"expected_answer":"DaVinciResolve","expected_behavior":"answer","tags":["current_fact"]}
+{"qid":"q4","question":"このユーザーが好きな音楽ジャンルは？","expected_behavior":"abstain","tags":["unknown"]}
+{"qid":"q5","question":"このユーザーの今の場所は？","required_sources":["e10"],"expected_answer":"Kyoto","expected_behavior":"answer","tags":["temporal","stale"]}
+{"qid":"q6","question":"このプロジェクト名は？","required_sources":["e6"],"expected_answer":"Core Context Compiler","expected_behavior":"answer","tags":["decision"]}
+{"qid":"q7","question":"このプロジェクトの評価と実装の順序は？","required_sources":["e7"],"expected_answer":"evaluation-first","expected_behavior":"answer","tags":["goal"]}
+{"qid":"q8","question":"memory atomに必須のものは？","required_sources":["e8"],"expected_answer":"source pointer","expected_behavior":"answer","tags":["provenance"]}
+{"qid":"q9","question":"OpenAI APIなしでどうする制約がある？","required_sources":["e17"],"expected_answer":"pass without OpenAI API","expected_behavior":"answer","tags":["ci"]}
+{"qid":"q10","question":"作業リストは何を使う？","required_sources":["e20"],"expected_answer":"GitHub Issues only","expected_behavior":"answer","tags":["process"]}
