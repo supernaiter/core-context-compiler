@@ -16,3 +16,16 @@ Pipeline:
 10. recall and source verification when needed
 
 The MVP keeps LLM calls optional. Deterministic mocks make the benchmark reproducible in CI.
+
+```mermaid
+flowchart TD
+  A["raw events"] --> B["typed memory atoms"]
+  B --> C["provenance-linked atoms"]
+  C --> D["temporal validity"]
+  D --> E["salience-gated core"]
+  E --> F["DSL / macro renderings"]
+  F --> G["baseline comparison"]
+  F --> H["budget sweep"]
+  F --> I["ablation"]
+  E --> J["recall + source verification"]
+```

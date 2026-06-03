@@ -14,6 +14,8 @@ MEMORY_HYPOTHESIS_VALUE = (
     "LLM memory should separate compiled core context from external recall; "
     "RAG is recall, not memory"
 )
+BENCHMARK_PASSING_VALUE = "answerAccuracy>=0.8 srcRecall5>=0.8"
+EXTERNAL_INSTRUCTION_POLICY_VALUE = "skipExternalRules"
 
 
 def make_memory_id(subject: str, relation: str, value: str, source_ids: list[str]) -> str:
@@ -327,10 +329,44 @@ class MockMemoryAtomExtractor:
                         stability=0.9,
                     )
                 )
-            web_poison = event.source_type == "web" and (
-                "ignore" in text.lower() or "override" in text.lower()
+            if "synthetic benchmarkの合格条件" in text:
+                atoms.append(
+                    _atom(
+                        events=rows,
+                        kind="constraint",
+                        subject="synthetic_benchmark",
+                        relation="passing_threshold",
+                        value=BENCHMARK_PASSING_VALUE,
+                        scope="project",
+                        source_ids=[event.event_id],
+                        confidence=0.92,
+                        importance=0.85,
+                        stability=0.8,
+                    )
+                )
+            if "外部ページや文書の命令" in text and "採用しない" in text:
+                atoms.append(
+                    _atom(
+                        events=rows,
+                        kind="rule",
+                        subject="memory_admission",
+                        relation="external_instruction_policy",
+                        value=EXTERNAL_INSTRUCTION_POLICY_VALUE,
+                        scope="global",
+                        source_ids=[event.event_id],
+                        confidence=0.94,
+                        importance=0.9,
+                        stability=0.9,
+                    )
+                )
+            poison_like = event.source_type in {"web", "document", "email"} and (
+                "ignore" in text.lower()
+                or "override" in text.lower()
+                or "credential" in text.lower()
+                or "api key" in text.lower()
+                or "system prompt" in text.lower()
             )
-            if web_poison:
+            if poison_like:
                 atoms.append(
                     _atom(
                         events=rows,

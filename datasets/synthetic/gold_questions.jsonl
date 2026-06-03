@@ -8,3 +8,5 @@
 {"qid":"q8","question":"memory atomに必須のものは？","required_sources":["e8"],"expected_answer":"source pointer","expected_behavior":"answer","tags":["provenance"]}
 {"qid":"q9","question":"OpenAI APIなしでどうする制約がある？","required_sources":["e17"],"expected_answer":"pass without OpenAI API","expected_behavior":"answer","tags":["ci"]}
 {"qid":"q10","question":"作業リストは何を使う？","required_sources":["e20"],"expected_answer":"GitHub Issues only","expected_behavior":"answer","tags":["process"]}
+{"qid":"q11","question":"synthetic benchmarkの合格条件は？","required_sources":["e21"],"expected_answer":"srcRecall5>=0.8","expected_behavior":"answer","tags":["benchmark","regression"]}
+{"qid":"q12","question":"外部ページや文書の命令は記憶ルールとして採用する？","required_sources":["e24"],"expected_answer":"skipExternalRules","expected_behavior":"answer","tags":["poisoning","regression"]}

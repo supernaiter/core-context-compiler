@@ -1,12 +1,12 @@
 project: core-context-compiler
-updated: 2026-06-04T07:04:00+09:00
-goal: Build Core Context Compiler MVP
+updated: 2026-06-04T07:36:02+09:00
+goal: Evaluate Core Context Compiler beyond MVP
 repo:
 - local: /Users/naoki/Documents/memory_compiler
 - github: supernaiter/core-context-compiler
 status:
-- phase: implementation
-- tickets: Ticket 1-11
+- phase: evaluation-hardening
+- tickets: Ticket 12-21
 - mode: eval-first
 - mvp: Typed + Pointer + Temporal + Salience + DSL + Eval
 done:
@@ -33,5 +33,38 @@ done:
 - commit: eb1dcba
 - state_commit: 86d6b23
 - GitHub Issues #1-#11 closed with verification
+- issue-scope #15/#20 synthetic benchmark and poisoning regression cases hardened
+- issue-scope #12/#13/#16/#18 report/eval metrics implemented
+- report comparison table added
+- budget sweep support added
+- recall_tokens/cost/latency/error labels added
+- verification: targeted pytest passed
+- verification: targeted ruff passed
+- verification: budget sweep command passed
+- issue-scope #14/#19 ablation toggles implemented
+- pointer/temporal/salience/recall ablations added
+- verbose/compact/dsl/macro render sweep outputs added
+- verification: ablation pytest passed
+- verification: ablation ruff passed
+- verification: run_ablation command passed
+- tag: v0.1.0-mvp
+- GitHub Issues #12-#21 created
+- baseline comparison report strengthened
+- budget sweep 128/256/512/1024/2048 added
+- ablation runner implemented
+- synthetic benchmark hardened
+- token/cost/latency metrics added
+- LongMemEval-S subset adapter added
+- error taxonomy added
+- DSL representation sweep added
+- poisoning regression cases added
+- README pitch and architecture diagram added
+- verification: uv run ruff check . passed
+- verification: uv run pytest passed
+- verification: run_eval passed
+- verification: budget_sweep passed
+- verification: run_ablation passed
+- verification: run_security_eval passed
+- verification: run_longmemeval_subset --help passed
 next:
-- monitor CI
+- commit and push

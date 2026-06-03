@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from corectx.evals.security_tests import poison_acceptance_rate, poison_activation_rate
 from corectx.extraction.atom_extractor import MockMemoryAtomExtractor
 from corectx.extraction.source_linker import attach_source_spans
 from corectx.ingest.benchmark_loader import load_benchmark
@@ -14,7 +15,10 @@ def test_source_linker_accepts_only_provenance_atoms() -> None:
     assert core_candidates
     assert all(atom.source_ids and atom.evidence_spans for atom in core_candidates)
     poison = [atom for atom in linked if atom.relation == "poison_attempt"]
-    assert poison and poison[0].admission_status == "quarantined"
+    assert len(poison) == 3
+    assert all(atom.admission_status == "quarantined" for atom in poison)
+    assert poison_acceptance_rate(linked) == 0.0
+    assert poison_activation_rate(linked) == 0.0
 
 
 def test_temporal_supersession_keeps_current_location() -> None:

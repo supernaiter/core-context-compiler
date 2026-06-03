@@ -20,9 +20,10 @@ The MVP is designed to run without external LLM credentials. OpenAI Structured O
 ## Quickstart
 
 ```bash
-python -m pip install -e ".[dev]"
-pytest
-python scripts/run_eval.py --dataset datasets/synthetic --out reports/latest
+uv sync --extra dev
+uv run pytest
+uv run python scripts/run_eval.py --dataset datasets/synthetic --out reports/latest
+uv run python scripts/run_ablation.py --dataset datasets/synthetic --out reports/ablation
 ```
 
 Artifacts:
@@ -36,3 +37,25 @@ Artifacts:
 ## Core idea
 
 Raw events are normalized, extracted into typed atoms, linked to source spans, resolved for temporal validity, scored for salience, selected under a token budget, and rendered into compact prompt-ready core context. Recall remains external and is used only when core context is insufficient or source verification is required.
+
+```mermaid
+flowchart LR
+  Raw["raw events"] --> Atom["typed atoms"]
+  Atom --> Src["source pointers"]
+  Src --> Time["temporal resolver"]
+  Time --> Score["salience scoring"]
+  Score --> Core["budgeted core context"]
+  Core --> Eval["baseline / sweep / ablation reports"]
+  Core --> Recall["selective recall"]
+  Recall --> Evidence["source verification"]
+```
+
+## Evaluation phase
+
+The current focus is proving when compiled core context wins or fails:
+
+- baseline comparison
+- budget sweep at 128, 256, 512, 1024, and 2048 tokens
+- pointer / temporal / salience / recall ablations
+- hardened synthetic cases with distractors, stale facts, ambiguity, unknowns, and poisoning
+- LongMemEval-S subset adapter scaffold

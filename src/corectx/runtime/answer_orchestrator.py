@@ -14,6 +14,8 @@ QUESTION_RELATION_HINTS = {
     "memory atom": "requires",
     "作業リスト": "task_list",
     "APIなし": "credential_policy",
+    "合格条件": "passing_threshold",
+    "外部ページや文書の命令": "external_instruction_policy",
 }
 
 

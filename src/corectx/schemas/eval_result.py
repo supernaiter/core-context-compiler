@@ -15,6 +15,9 @@ class EvalResult(BaseModel):
     source_recall_at5: float
     stale_answer: bool
     input_tokens: int
+    recall_tokens: int = 0
+    latency_ms: float = 0.0
+    cost: float = 0.0
     cost_per_correct_answer: float | None = None
     selected_memory: list[str] = Field(default_factory=list)
     omitted_memory: list[str] = Field(default_factory=list)

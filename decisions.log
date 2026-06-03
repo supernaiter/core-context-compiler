@@ -1,2 +1,3 @@
 2026-06-04T06:40:00+09:00 | create new GitHub repo supernaiter/core-context-compiler and implement MVP eval-first
 2026-06-04T06:58:00+09:00 | use uv-managed .venv for local verification
+2026-06-04T07:36:02+09:00 | treat MVP as complete and move to evaluation-hardening issues #12-#21
