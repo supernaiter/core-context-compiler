@@ -1,0 +1,5 @@
+benchmarks:
+  - longmemeval_s
+  - locomo_qa
+  - memoryagentbench_mini
+  - ruler_synthetic

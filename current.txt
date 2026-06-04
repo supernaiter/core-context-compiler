@@ -1,12 +1,12 @@
 project: core-context-compiler
-updated: 2026-06-04T08:36:00+09:00
-goal: Evaluate Core Context Compiler beyond MVP
+updated: 2026-06-04T09:11:46+09:00
+goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
 - github: supernaiter/core-context-compiler
 status:
-- phase: evaluation-hardening
-- tickets: Ticket 12-21
+- phase: v1-release-gate
+- tickets: GitHub Issues #23-#31
 - mode: eval-first
 - mvp: Typed + Pointer + Temporal + Salience + DSL + Eval
 done:
@@ -91,5 +91,31 @@ done:
 - commit: d618fb8
 - GitHub CI run 26919256945 success
 - GitHub Issue #22 closed with verification
+- tag: v0.2.0-eval-gauntlet
+- main fast-forwarded to v0.2-eval-gauntlet
+- GitHub Issues #23-#30 created
+- GitHub Issue #31 created for token quantitative gate failure
+- CHANGELOG.md added
+- docs/benchmarks summaries added
+- run_token_efficiency implemented
+- run_public_benchmarks implemented
+- run_full_ablation implemented
+- run_v1_release_gate implemented
+- corectx CLI implemented
+- MemoryBackend protocol implemented
+- InMemoryBackend implemented
+- adapter stubs implemented
+- v1 docs added
+- verification: uv run pytest passed
+- verification: uv run ruff check . passed
+- verification: run_eval_gauntlet passed
+- verification: run_token_efficiency passed
+- verification: run_public_benchmarks passed
+- verification: run_full_ablation passed
+- verification: run_security_eval passed
+- verification: run_v1_release_gate passed
+- v1_release_gate: gate_pass false
+- weak_result: token_quantitative_gate false
+- no_v1_tag: true
 next:
-- await review or merge
+- fix token quantitative gate failure in GitHub Issue #31

@@ -83,3 +83,28 @@ Current limitations:
 - LongMemEval scoring is not part of v0.2.
 - Latency is local runner latency, not external LLM latency.
 - Reports are generated locally and are not CI artifacts yet.
+
+## v1.0 Work
+
+Run the current release gate:
+
+```bash
+uv run python scripts/run_v1_release_gate.py --out reports/v1_release_gate
+```
+
+Focused runners:
+
+```bash
+uv run python scripts/run_token_efficiency.py --dataset synthetic_v2 --out reports/v0.3_token_efficiency
+uv run python scripts/run_public_benchmarks.py --out reports/v0.4_public_benchmarks
+uv run python scripts/run_full_ablation.py --dataset synthetic_v2 --out reports/v0.5_full_modules
+uv run python scripts/run_security_eval.py --dataset synthetic_v2 --out reports/v0.6_security
+```
+
+Committed summaries live in `docs/benchmarks/`. Raw reports remain gitignored.
+
+Current known limitations:
+
+- Token inversion currently fails: compiled core uses more tokens than naive RAG on `synthetic_v2`.
+- Public benchmark adapters are runnable subset scaffolds, not full external benchmark validation.
+- `v1.0.0` should not be tagged until the release gate summary says it passes.

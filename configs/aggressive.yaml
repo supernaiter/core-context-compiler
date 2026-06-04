@@ -1,0 +1,4 @@
+recall_policy:
+  mode: aggressive
+  max_recall_items: 5
+  source_id_only_when_possible: false

@@ -1,0 +1,4 @@
+memory_admission:
+  reject_untrusted_preference_updates: true
+  quarantine_prompt_injection: true
+  persist_credentials: false

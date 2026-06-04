@@ -29,3 +29,12 @@ flowchart TD
   F --> I["ablation"]
   E --> J["recall + source verification"]
 ```
+
+## v1 Modules
+
+- Multi-resolution memory stores R0 atoms, R1 one-line summaries, R2 short summaries, R3 episode summaries, and R4 raw span pointers.
+- Rule induction only promotes repeated explicit corrections or decisions.
+- Entailment pruning removes only high-confidence duplicates and keeps provenance.
+- Delta-to-default pruning excludes default-like memory from core without hard deletion.
+- Query-conditioned loadout separates global core, project core, task pack, evidence pack, and recall plan.
+- Security policy quarantines untrusted or poisoned memory before it can enter core context.

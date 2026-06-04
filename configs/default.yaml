@@ -1,0 +1,10 @@
+recall_policy:
+  mode: conservative
+  confidence_threshold: 0.85
+  source_verification_threshold: 0.75
+  max_recall_items: 2
+  max_source_span_chars: 240
+source_verification:
+  mode: minimal_quote
+  sentence_window: 1
+  max_chars: 240
