@@ -114,6 +114,8 @@ done:
 - verification: run_full_ablation passed
 - verification: run_security_eval passed
 - verification: run_v1_release_gate passed
+- commit: 9c79429
+- GitHub CI run 26921378158 success
 - v1_release_gate: gate_pass false
 - weak_result: token_quantitative_gate false
 - no_v1_tag: true
