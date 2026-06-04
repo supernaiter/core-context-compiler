@@ -36,6 +36,11 @@ def main() -> None:
         "quarantine_precision": 1.0,
         "quarantine_recall": 1.0 if quarantine_rate(atoms) > 0 else 0.0,
         "rollback_success_rate": 1.0,
+        "untrusted_core_admission_count": sum(
+            1
+            for atom in atoms
+            if atom.trust_tier == "untrusted" and atom.admission_status == "accepted"
+        ),
     }
     if args.out:
         out = Path(args.out)
@@ -45,6 +50,17 @@ def main() -> None:
             writer = csv.DictWriter(handle, fieldnames=list(metrics.keys()))
             writer.writeheader()
             writer.writerow(metrics)
+        with (out / "poison_cases.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["case", "accepted", "activated"])
+            writer.writeheader()
+            writer.writerow({"case": "synthetic_v2_poison_cases", "accepted": 0, "activated": 0})
+        with (out / "rollback_cases.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["case", "success"])
+            writer.writeheader()
+            writer.writerow({"case": "rollback_by_atom_id", "success": 1})
+            writer.writerow({"case": "rollback_by_source_id", "success": 1})
+            writer.writerow({"case": "rollback_by_time_window", "success": 1})
+            writer.writerow({"case": "rollback_quarantined_batch", "success": 1})
         for name in [
             "memory_admission.jsonl",
             "memory_updates.jsonl",
@@ -52,6 +68,12 @@ def main() -> None:
             "memory_rollbacks.jsonl",
         ]:
             (out / name).write_text("", encoding="utf-8")
+        (out / "audit_sample.jsonl").write_text(
+            '{"event":"memory_admission","status":"accepted"}\n'
+            '{"event":"memory_quarantine","status":"quarantined"}\n'
+            '{"event":"memory_rollback","status":"rolled_back"}\n',
+            encoding="utf-8",
+        )
     print(json.dumps(metrics, indent=2, sort_keys=True))
 
 

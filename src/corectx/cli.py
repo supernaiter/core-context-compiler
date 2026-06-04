@@ -10,18 +10,34 @@ from corectx.ingest.benchmark_loader import load_benchmark
 from corectx.stores.memory_store_inmemory import InMemoryBackend
 
 
+def resolve_dataset(value: str) -> str:
+    candidate = Path(value)
+    if candidate.exists():
+        return str(candidate)
+    named = Path("datasets") / value
+    if named.exists():
+        return str(named)
+    return value
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="corectx")
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("ingest").add_argument("--input", required=True)
+    ingest_parser = sub.add_parser("ingest")
+    ingest_parser.add_argument("--input", required=True)
+    ingest_parser.add_argument("--store", default=".corectx/store")
     compile_parser = sub.add_parser("compile")
     compile_parser.add_argument("--dataset", default="datasets/synthetic_v2")
+    compile_parser.add_argument("--store", default=".corectx/store")
     compile_parser.add_argument("--budget", type=int, default=512)
+    compile_parser.add_argument("--representation", default="hybrid")
     answer_parser = sub.add_parser("answer")
     answer_parser.add_argument("--query", required=True)
     answer_parser.add_argument("--dataset", default="datasets/synthetic_v2")
+    answer_parser.add_argument("--store", default=".corectx/store")
     eval_parser = sub.add_parser("eval")
     eval_parser.add_argument("--dataset", default="datasets/synthetic_v2")
+    eval_parser.add_argument("--system", default="full_compiler")
     eval_parser.add_argument("--out", default="reports/cli_eval")
     sub.add_parser("ablate")
     benchmark_parser = sub.add_parser("benchmark")
@@ -37,13 +53,13 @@ def main() -> None:
     if args.command == "ingest":
         print(json.dumps({"input": args.input, "status": "accepted"}))
     elif args.command == "compile":
-        dataset = load_benchmark(args.dataset)
+        dataset = load_benchmark(resolve_dataset(args.dataset))
         atoms = EvalRunner(budget_tokens=args.budget).compile_atoms(dataset)
         print(json.dumps({"atoms": len(atoms), "budget": args.budget}))
     elif args.command == "answer":
         print(json.dumps({"answer": "Run corectx eval for deterministic benchmark answers."}))
     elif args.command == "eval":
-        metrics = EvalRunner().run(args.dataset, args.out)
+        metrics = EvalRunner().run(resolve_dataset(args.dataset), args.out)
         print(json.dumps(metrics, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "benchmark":
         result = run_token_efficiency("datasets/synthetic_v2", args.out)

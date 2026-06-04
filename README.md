@@ -97,10 +97,12 @@ Focused runners:
 ```bash
 uv run python scripts/run_token_efficiency.py --dataset synthetic_v2 --out reports/v0.3_token_efficiency
 uv run python scripts/run_public_benchmarks.py --out reports/v0.4_public_benchmarks
+uv run python scripts/run_public_benchmarks.py --out reports/v0.5_real_external
 uv run python scripts/ingest_locomo.py --subset-size 30 --out datasets/public_locomo_mini
 uv run python scripts/run_public_benchmarks.py --include-real-locomo --out reports/v0.4_public_benchmarks_real
 uv run python scripts/run_full_ablation.py --dataset synthetic_v2 --out reports/v0.5_full_modules
 uv run python scripts/run_security_eval.py --dataset synthetic_v2 --out reports/v0.6_security
+uv run python scripts/run_backend_adapter_eval.py --out reports/v0.8_backend_adapters
 ```
 
 Committed summaries live in `docs/benchmarks/`. Raw reports remain gitignored.
@@ -108,5 +110,6 @@ Committed summaries live in `docs/benchmarks/`. Raw reports remain gitignored.
 Current known limitations:
 
 - Token inversion currently fails: compiled core uses more tokens than naive RAG on `synthetic_v2`.
-- Public benchmark adapters are runnable subset scaffolds, not full external benchmark validation.
-- `v1.0.0` should not be tagged until the release gate summary says it passes.
+- LoCoMo real mini is the only committed real external mini subset.
+- LongMemEval-S and MemoryAgentBench are still adapter-only unless upstream data is ingested.
+- Source metrics are labeled exact, approximated, or unavailable; approximated source metrics are not exact validation.

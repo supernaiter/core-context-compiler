@@ -1,0 +1,9 @@
+system: "Classify memories as user/project deltas, defaults, evidence-only, temporary, or unsafe."
+classes:
+  - USER_DELTA
+  - PROJECT_DELTA
+  - DEFAULT_SYSTEM
+  - DEFAULT_MODEL
+  - EVIDENCE_ONLY
+  - TEMPORARY
+  - UNSAFE_OR_UNTRUSTED

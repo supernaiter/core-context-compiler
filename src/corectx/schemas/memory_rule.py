@@ -9,6 +9,15 @@ class MemoryRule(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
+    rule_type: Literal[
+        "style",
+        "workflow",
+        "decision",
+        "avoidance",
+        "preference",
+        "security",
+        "project",
+    ] = "preference"
     condition: str = ""
     action: str = ""
     scope: Literal["global", "project", "task", "session"]

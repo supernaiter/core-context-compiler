@@ -15,5 +15,18 @@ class SourceSpan(BaseModel):
     span_end: int | None = None
     quote: str | None = None
     timestamp: datetime | None = None
-    trust_tier: Literal["user", "system", "tool", "web", "untrusted"] = "user"
+    source_metric_status: Literal["exact", "approximated", "unavailable"] = "exact"
+    trust_tier: Literal[
+        "user",
+        "tool",
+        "web",
+        "untrusted",
+        "system",
+        "user_direct",
+        "tool_verified",
+        "document_trusted",
+        "web_untrusted",
+        "retrieved_untrusted",
+        "inferred",
+    ] = "user_direct"
     confidence: float = 1.0

@@ -44,6 +44,14 @@ def main() -> None:
             "--out",
             str(out / "public_benchmarks"),
         ]),
+        "backend_adapters": run([
+            "uv",
+            "run",
+            "python",
+            "scripts/run_backend_adapter_eval.py",
+            "--out",
+            str(out / "backend_adapters"),
+        ]),
         "full_ablation": run([
             "uv",
             "run",
@@ -67,9 +75,25 @@ def main() -> None:
     }
     metrics = read_json(out / "synthetic_v2" / "metrics.json")
     token_metrics = read_json(out / "token_efficiency" / "metrics.json")
+    public_metrics = read_json(out / "public_benchmarks" / "metrics.json")
+    security_metrics = read_security_csv(out / "security" / "security.csv")
     pass_fail = {key: value == 0 for key, value in checks.items()}
     token_gate = token_efficiency_gate(token_metrics)
     pass_fail["token_quantitative_gate"] = token_gate
+    pass_fail["real_external_mini_present"] = any(
+        payload.get("validation_kind") == "real_external_mini"
+        for payload in public_metrics.values()
+    )
+    pass_fail["source_metric_status_labeled"] = all(
+        payload.get("source_metric_status") in {"exact", "approximated", "unavailable"}
+        for payload in public_metrics.values()
+    )
+    pass_fail["security_quantitative_gate"] = (
+        security_metrics.get("poison_acceptance_rate", 1.0) == 0.0
+        and security_metrics.get("poison_activation_rate", 1.0) == 0.0
+        and security_metrics.get("untrusted_core_admission_count", 1.0) == 0.0
+        and security_metrics.get("rollback_success_rate", 0.0) >= 0.95
+    )
     gate_pass = all(pass_fail.values()) and bool(metrics) and bool(token_metrics)
     (out / "pass_fail.json").write_text(
         json.dumps({"gate_pass": gate_pass, **pass_fail}, indent=2, sort_keys=True),
@@ -103,6 +127,18 @@ def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def read_security_csv(path: Path) -> dict[str, float]:
+    if not path.exists():
+        return {}
+    import csv
+
+    with path.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    if not rows:
+        return {}
+    return {key: float(value) for key, value in rows[0].items()}
+
+
 def token_efficiency_gate(token_metrics: dict) -> bool:
     metrics = token_metrics.get("metrics", {})
     core = metrics.get("compressed_core_plus_recall", {})
@@ -127,6 +163,7 @@ def write_copies(out: Path) -> None:
         out / "public_benchmarks" / "aggregate_public_benchmark.md",
         out / "public_benchmarks.md",
     )
+    copy_if_exists(out / "backend_adapters" / "adapter_comparison.md", out / "backend_adapters.md")
     copy_if_exists(out / "full_modules" / "full_ablation.md", out / "ablation.md")
     copy_if_exists(out / "token_efficiency" / "summary.md", out / "token_efficiency.md")
     copy_if_exists(out / "security" / "security_summary.md", out / "security.md")

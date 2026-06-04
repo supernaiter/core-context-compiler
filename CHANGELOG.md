@@ -1,10 +1,13 @@
 # Changelog
 
-## v1.0 work in progress
+## v1.0.0
 
 - Added v1.0 issue plan and release gate scaffolding.
 - Added token efficiency, public benchmark, full ablation, security, and release gate runners.
 - Added backend protocol, in-memory backend, CLI entrypoint, and committed benchmark summaries.
+- Added LoCoMo real mini ingestion and committed 30-question mini subset.
+- Added exact/approximated/unavailable source metric labeling.
+- Added backend adapter evaluation runner.
 - Release gate passes by score_per_1k_tokens; absolute token inversion still fails.
 
 ## v0.2.0-eval-gauntlet

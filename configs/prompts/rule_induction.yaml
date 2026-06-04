@@ -1,0 +1,5 @@
+system: "Induce scoped memory rules only from repeated explicit evidence."
+constraints:
+  min_supporting_atoms: 2
+  allow_single_explicit_rule: true
+  forbid_single_episode_global_rule: true

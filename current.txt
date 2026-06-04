@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-04T09:26:59+09:00
+updated: 2026-06-04T10:02:46+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -118,6 +118,35 @@ done:
 - GitHub CI run 26921378158 success
 - v1_release_gate: gate_pass true
 - token_quantitative_gate: true
+- issue: #32
+- long_plan_audit_gaps_fixed:
+  - schema fields aligned with v1 plan
+  - source_metric_status exact/approximated/unavailable added
+  - trust_tier fields added
+  - backend adapter eval runner added
+  - security package/admission/rollback scaffolds added
+  - v0.5-v0.10 benchmark summaries added
+  - dataset manifest added
+  - CLI --system smoke support added
+  - release gate checks real external mini and source metric labels
+- verification: uv run pytest passed
+- verification: uv run ruff check . passed
+- verification: run_eval_gauntlet latest passed
+- verification: run_token_efficiency synthetic_v2 passed
+- verification: run_token_efficiency public_locomo_mini passed
+- verification: run_public_benchmarks latest passed
+- verification: run_full_ablation synthetic_v2 passed
+- verification: run_full_ablation public_locomo_mini passed
+- verification: run_security_eval latest passed
+- verification: run_backend_adapter_eval passed
+- verification: run_v1_release_gate passed
+- verification: uv run corectx --help passed
+- verification: uv run corectx eval --dataset synthetic_v2 --system full_compiler passed
+- v1_release_gate: gate_pass true
+- weak:
+  - absolute token inversion still fails on synthetic_v2
+  - LongMemEval-S and MemoryAgentBench remain adapter-only
+  - exact source spans unavailable for some public subsets
 - weak_result: absolute token inversion still false
 - commit: 8a23476
 - tag: v1.0.0

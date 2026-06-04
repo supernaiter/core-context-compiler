@@ -1,0 +1,10 @@
+system: "Plan global_core, project_core, task_pack, evidence_pack, and recall_plan for a query."
+query_classes:
+  - style_query
+  - project_query
+  - past_decision_query
+  - source_request
+  - current_fact_request
+  - unknown_or_ambiguous
+  - conflict_check
+  - security_sensitive

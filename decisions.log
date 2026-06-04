@@ -6,3 +6,4 @@
 2026-06-04T09:19:10+09:00 | v1 release gate passes by score_per_1k_tokens while absolute token inversion still fails
 2026-06-04T09:21:28+09:00 | tag and release v1.0.0 after release gate pass; keep public benchmark scaffold limitation documented
 2026-06-04T09:26:59+09:00 | add committed real LoCoMo mini subset to reduce public benchmark scaffold weakness
+2026-06-04T10:02:46+09:00 | open Issue #32 for long-term plan audit gaps; keep weak results explicit instead of retagging without evidence

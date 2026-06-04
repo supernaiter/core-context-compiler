@@ -40,13 +40,25 @@ class MemoryAtom(BaseModel):
     source_ids: list[str]
     evidence_spans: list[SourceSpan] = Field(default_factory=list)
     trust_tier: Literal["high", "medium", "low", "untrusted"] = "medium"
-    admission_status: Literal["candidate", "accepted", "rejected", "quarantined"] = "candidate"
+    admission_status: Literal[
+        "candidate",
+        "accepted",
+        "rejected",
+        "quarantined",
+        "superseded",
+        "rolled_back",
+    ] = "candidate"
+    derived_from: list[str] = Field(default_factory=list)
+    entails: list[str] = Field(default_factory=list)
+    contradicted_by: list[str] = Field(default_factory=list)
     token_cost_verbose: int | None = None
     token_cost_compact: int | None = None
     token_cost_dsl: int | None = None
+    token_cost_hybrid: int | None = None
     render_verbose: str | None = None
     render_compact: str | None = None
     render_dsl: str | None = None
+    render_hybrid: str | None = None
     salience: float | None = None
 
     @field_validator("confidence", "importance", "stability")

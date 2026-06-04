@@ -24,31 +24,54 @@ class InMemoryBackend:
         self.sources: dict[str, list[SourceSpan]] = {}
         self.history: dict[str, list[MemoryAtom]] = {}
 
-    def put_event(self, event: RawEvent) -> None:
+    def put_event(self, event: RawEvent) -> str:
         self.events[event.event_id] = event
+        return event.event_id
 
-    def put_atom(self, atom: MemoryAtom) -> None:
+    def put_atom(self, atom: MemoryAtom) -> str:
         self.history.setdefault(atom.id, []).append(atom)
         self.atoms[atom.id] = atom
         for span in atom.evidence_spans:
             self.sources.setdefault(span.source_id, []).append(span)
+        return atom.id
 
     def get_atom(self, atom_id: str) -> MemoryAtom | None:
         return self.atoms.get(atom_id)
 
-    def search_atoms(self, query: str, *, limit: int = 5) -> list[MemoryAtom]:
+    def search_atoms(
+        self,
+        query: str,
+        *,
+        k: int = 5,
+        limit: int | None = None,
+    ) -> list[MemoryAtom]:
+        if limit is not None:
+            k = limit
         terms = set(query.lower().split())
         scored = []
         for atom in self.atoms.values():
             haystack = f"{atom.subject} {atom.relation} {atom.value}".lower().split()
             scored.append((len(terms & set(haystack)), atom.id, atom))
         scored.sort(reverse=True)
-        return [atom for score, _, atom in scored[:limit] if score > 0]
+        return [atom for score, _, atom in scored[:k] if score > 0]
 
-    def get_sources(self, source_id: str) -> list[SourceSpan]:
-        return self.sources.get(source_id, [])
+    def get_sources(self, source_ids: list[str] | str) -> list[SourceSpan]:
+        if isinstance(source_ids, str):
+            source_ids = [source_ids]
+        spans: list[SourceSpan] = []
+        for source_id in source_ids:
+            spans.extend(self.sources.get(source_id, []))
+        return spans
 
-    def get_related(self, atom_id: str, *, limit: int = 5) -> list[MemoryAtom]:
+    def get_related(
+        self,
+        atom_id: str,
+        *,
+        k: int = 5,
+        limit: int | None = None,
+    ) -> list[MemoryAtom]:
+        if limit is not None:
+            k = limit
         atom = self.atoms.get(atom_id)
         if atom is None:
             return []
@@ -56,7 +79,7 @@ class InMemoryBackend:
             other
             for other in self.atoms.values()
             if other.id != atom_id and (other.subject == atom.subject or other.scope == atom.scope)
-        ][:limit]
+        ][:k]
 
     def update_atom(self, atom: MemoryAtom) -> None:
         self.put_atom(atom)

@@ -1,0 +1,5 @@
+system: "Answer from compiled core when sufficient; recall or verify sources only when required."
+rules:
+  - abstain_when_unknown
+  - cite_verified_sources_when_requested
+  - do_not_use_quarantined_memory
