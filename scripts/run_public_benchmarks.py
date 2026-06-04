@@ -25,6 +25,7 @@ BASELINES = [
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="reports/v0.4_public_benchmarks")
+    parser.add_argument("--include-real-locomo", action="store_true")
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -41,6 +42,24 @@ def main() -> None:
         aggregate[name] = {"note": note, "metrics": metrics}
         (out / f"{name}_summary.md").write_text(
             render_summary(name, note, metrics),
+            encoding="utf-8",
+        )
+    real_locomo = Path("datasets/public_locomo_mini")
+    if args.include_real_locomo and real_locomo.exists():
+        from corectx.ingest.benchmark_loader import load_benchmark
+
+        dataset = load_benchmark(real_locomo)
+        runner = EvalRunner(
+            budget_tokens=128,
+            baselines=[baseline for baseline in BASELINES if baseline != "full_compiler"],
+        )
+        output = runner.run_dataset(dataset)
+        metrics = dict(output.metrics)
+        metrics["full_compiler"] = dict(metrics["compressed_core_plus_recall"])
+        note = "Real LoCoMo mini subset converted from snap-research/locomo."
+        aggregate["locomo_real_mini"] = {"note": note, "metrics": metrics}
+        (out / "locomo_real_mini_summary.md").write_text(
+            render_summary("locomo_real_mini", note, metrics),
             encoding="utf-8",
         )
     (out / "aggregate_public_benchmark.md").write_text(

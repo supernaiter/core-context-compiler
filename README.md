@@ -97,6 +97,8 @@ Focused runners:
 ```bash
 uv run python scripts/run_token_efficiency.py --dataset synthetic_v2 --out reports/v0.3_token_efficiency
 uv run python scripts/run_public_benchmarks.py --out reports/v0.4_public_benchmarks
+uv run python scripts/ingest_locomo.py --subset-size 30 --out datasets/public_locomo_mini
+uv run python scripts/run_public_benchmarks.py --include-real-locomo --out reports/v0.4_public_benchmarks_real
 uv run python scripts/run_full_ablation.py --dataset synthetic_v2 --out reports/v0.5_full_modules
 uv run python scripts/run_security_eval.py --dataset synthetic_v2 --out reports/v0.6_security
 ```

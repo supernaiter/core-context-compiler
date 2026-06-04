@@ -5,3 +5,4 @@
 2026-06-04T09:11:46+09:00 | merge v0.2 into main, create v1 issues #23-#30, do not tag v1.0.0 because token quantitative gate fails
 2026-06-04T09:19:10+09:00 | v1 release gate passes by score_per_1k_tokens while absolute token inversion still fails
 2026-06-04T09:21:28+09:00 | tag and release v1.0.0 after release gate pass; keep public benchmark scaffold limitation documented
+2026-06-04T09:26:59+09:00 | add committed real LoCoMo mini subset to reduce public benchmark scaffold weakness

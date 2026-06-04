@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-04T09:21:28+09:00
+updated: 2026-06-04T09:26:59+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -124,5 +124,10 @@ done:
 - GitHub release: v1.0.0
 - GitHub CI run 26921664591 success
 - GitHub Issues #23-#31 closed
+- public_locomo_mini dataset added
+- public_locomo_mini eval questions: 30
+- real LoCoMo mini run passed
+- verification: uv run pytest passed 23 tests
+- verification: uv run ruff check . passed
 next:
-- strengthen real public benchmark datasets beyond scaffold
+- expand real public benchmark coverage beyond LoCoMo mini

@@ -33,3 +33,10 @@ Required reports:
 - release gate summary
 
 Never fabricate missing metrics. If a benchmark lacks exact source spans, mark source metrics as approximated or unavailable.
+
+Real LoCoMo mini:
+
+```bash
+uv run python scripts/ingest_locomo.py --subset-size 30 --out datasets/public_locomo_mini
+uv run python scripts/run_public_benchmarks.py --include-real-locomo --out reports/v0.4_public_benchmarks_real
+```

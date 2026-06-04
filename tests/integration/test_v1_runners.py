@@ -33,6 +33,13 @@ def test_public_subset_adapters_load() -> None:
         assert dataset.events
 
 
+def test_public_locomo_mini_committed() -> None:
+    dataset = load_public_subset("locomo_qa", root="datasets/public_locomo_mini")
+    assert dataset.name == "locomo_qa"
+    assert len(dataset.questions) >= 30
+    assert dataset.questions[0].tags[-1].startswith("relation:locomo_qa_")
+
+
 def test_v1_memory_modules() -> None:
     dataset = load_public_subset("ruler_synthetic")
     atom = dataset.gold_atoms[0]
