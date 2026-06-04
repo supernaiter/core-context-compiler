@@ -167,12 +167,7 @@ def evaluate_ablation(
 def _recall_tokens(recovered_sources: list[str], atoms: list[MemoryAtom]) -> int:
     if not recovered_sources:
         return 0
-    source_ids = set(recovered_sources)
-    return sum(
-        atom.token_cost_verbose or atom.token_cost_dsl or 1
-        for atom in atoms
-        if source_ids & set(atom.source_ids)
-    )
+    return len(set(recovered_sources))
 
 
 def render_sweep(

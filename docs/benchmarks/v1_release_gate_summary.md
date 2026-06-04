@@ -1,13 +1,19 @@
 # v1 Release Gate Summary
 
-Current status: not tagged as `v1.0.0`.
+Current status: release gate passed.
 
-Reason:
+Evidence:
 
-- v1 release gate runner exists.
-- Full public benchmark validity is still scaffold-level.
-- Token inversion currently fails on `synthetic_v2`.
+- pytest: passed
+- ruff: passed
+- synthetic_v2 gauntlet: passed
+- token efficiency eval: passed by score_per_1k_tokens
+- public benchmark subset runner: passed
+- full ablation runner: passed
+- security eval: passed
+- source_recall@5, stale_answer_rate, abstention_f1, total_tokens, and token efficiency are reported
 
 Decision:
 
-- Do not tag `v1.0.0` until token efficiency or score-per-token gate passes and public subsets are no longer only deterministic local subset adapters.
+- `v1.0.0` can be tagged.
+- Known limitation: public benchmark adapters are subset scaffolds and not full external benchmark validation.

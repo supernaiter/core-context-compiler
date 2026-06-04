@@ -5,6 +5,7 @@
 - Added v1.0 issue plan and release gate scaffolding.
 - Added token efficiency, public benchmark, full ablation, security, and release gate runners.
 - Added backend protocol, in-memory backend, CLI entrypoint, and committed benchmark summaries.
+- Release gate passes by score_per_1k_tokens; absolute token inversion still fails.
 
 ## v0.2.0-eval-gauntlet
 

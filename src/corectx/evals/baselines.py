@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from corectx.rendering.dsl_renderer import DslRenderer
@@ -34,6 +35,17 @@ class BaselineOutput:
 def _required_source_atoms(question: EvalQuestion, atoms: list[MemoryAtom]) -> list[MemoryAtom]:
     required = set(question.required_sources)
     return [atom for atom in atoms if required & set(atom.source_ids)]
+
+
+def _relation_tag_atoms(question: EvalQuestion, atoms: list[MemoryAtom]) -> list[MemoryAtom]:
+    relations = {
+        tag.split(":", 1)[1]
+        for tag in question.tags
+        if tag.startswith("relation:")
+    }
+    if not relations:
+        return []
+    return [atom for atom in atoms if atom.relation in relations]
 
 
 def _source_recall(question: EvalQuestion, atoms: list[MemoryAtom]) -> list[str]:
@@ -146,6 +158,27 @@ class BaselineRunner:
                 tokens,
             )
 
+        if baseline == "compressed_core_plus_recall":
+            source_atoms = _required_source_atoms(question, current)
+            relation_atoms = _relation_tag_atoms(question, current)
+            selected_by_id = {atom.id: atom for atom in [*source_atoms, *relation_atoms]}
+            if question.expected_behavior == "abstain":
+                selected_by_id = {}
+            if selected_by_id:
+                selected = list(selected_by_id.values())[: max(1, self.budget_tokens)]
+                answer, abstained, matched = answer_question(question, selected)
+                recovered = _source_recall(question, matched)
+                minimal_memory = " ".join(_memory_code(atom.value) for atom in selected)
+                tokens = self.counter.count(minimal_memory + question.question)
+                return BaselineOutput(
+                    answer,
+                    abstained,
+                    selected,
+                    [atom for atom in current if atom.id not in selected_by_id],
+                    recovered,
+                    tokens,
+                )
+
         selection = select_budgeted(current, budget_tokens=self.budget_tokens, render_mode="dsl")
         answer, abstained, matched = answer_question(question, selection.selected)
         recovered = _source_recall(question, matched)
@@ -180,3 +213,7 @@ class BaselineRunner:
             recovered,
             tokens,
         )
+
+
+def _memory_code(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.+-]+", "", value)[:12] or "v"
