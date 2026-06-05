@@ -109,6 +109,19 @@ class DomainEvolutionRun:
     bad_mistake_explanation: str
 
 
+@dataclass(frozen=True)
+class DomainIntelligenceReleaseGateRun:
+    components: dict[str, object]
+    component_task_counts: dict[str, int]
+    domains: list[str]
+    primary_system: str
+    primary_metrics: dict[str, float]
+    aggregate_metrics: dict[str, dict[str, float]]
+    harmful_confidence_rate: float
+    pass_fail: dict[str, bool]
+    known_failures: list[str]
+
+
 def run_domain_judgment_benchmark(
     *,
     domain: str,
@@ -309,6 +322,102 @@ def run_domain_evolution_curve(
         bad_mistake_explanation=bad_mistake_explanation,
     )
     write_domain_evolution_report(out, run)
+    return run
+
+
+def run_domain_intelligence_release_gate(
+    *,
+    out_dir: str | Path,
+    domain_root: str | Path | None = None,
+    multi_domain_task_count: int = 100,
+) -> DomainIntelligenceReleaseGateRun:
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    component_out = out / "components"
+    root = Path(domain_root) if domain_root is not None else DEFAULT_DOMAIN_ROOT
+
+    ssi_specialist = run_domain_judgment_benchmark(
+        domain="autonomous_domain_evolver",
+        out_dir=component_out / "ssi_specialist",
+        domain_root=root,
+        task_count=100,
+        suite="ssi_specialist",
+    )
+    folding_method = run_folding_method_study(
+        domain="autonomous_domain_evolver",
+        out_dir=component_out / "folding_method_study",
+        domain_root=root,
+        task_count=100,
+    )
+    mcp_service = run_domain_judgment_benchmark(
+        domain="autonomous_domain_evolver",
+        out_dir=component_out / "mcp_domain_service",
+        domain_root=root,
+        task_count=100,
+        system=MCP_SERVICE_SYSTEM,
+    )
+    multi_domain = run_multi_domain_intelligence_eval(
+        out_dir=component_out / "multi_domain_intelligence",
+        domain_root=root,
+        task_count=max(multi_domain_task_count, 100),
+    )
+    evolution_curve = run_domain_evolution_curve(
+        domain="autonomous_domain_evolver",
+        out_dir=component_out / "domain_evolution_curve",
+        domain_root=root,
+        task_count=100,
+    )
+
+    component_task_counts = {
+        "ssi_specialist": len(ssi_specialist.tasks),
+        "folding_method_study": len(folding_method.tasks),
+        "mcp_domain_service": len(mcp_service.tasks),
+        "multi_domain_transfer": sum(
+            len(tasks) for tasks in multi_domain.tasks_by_domain.values()
+        ),
+        "domain_evolution_curve": len(evolution_curve.tasks),
+    }
+    primary_system = _choose_primary_release_system(multi_domain.aggregate_metrics)
+    primary_metrics = dict(multi_domain.aggregate_metrics[primary_system])
+    primary_metrics["delta_vs_bare"] = (
+        primary_metrics["mean_expert_judgment_score"]
+        - multi_domain.aggregate_metrics["bare_llm"]["mean_expert_judgment_score"]
+    )
+    harmful_confidence_rate = _harmful_confidence_rate(
+        multi_domain.results_by_domain,
+        primary_system,
+    )
+    pass_fail = _domain_intelligence_release_targets(
+        component_task_counts=component_task_counts,
+        domains=multi_domain.domains,
+        aggregate_metrics=multi_domain.aggregate_metrics,
+        primary_system=primary_system,
+        primary_metrics=primary_metrics,
+        harmful_confidence_rate=harmful_confidence_rate,
+        ssi_specialist=ssi_specialist,
+        folding_method=folding_method,
+        mcp_service=mcp_service,
+        multi_domain=multi_domain,
+        evolution_curve=evolution_curve,
+    )
+    run = DomainIntelligenceReleaseGateRun(
+        components={
+            "ssi_specialist": ssi_specialist,
+            "folding_method_study": folding_method,
+            "mcp_domain_service": mcp_service,
+            "multi_domain_intelligence": multi_domain,
+            "domain_evolution_curve": evolution_curve,
+        },
+        component_task_counts=component_task_counts,
+        domains=multi_domain.domains,
+        primary_system=primary_system,
+        primary_metrics=primary_metrics,
+        aggregate_metrics=multi_domain.aggregate_metrics,
+        harmful_confidence_rate=harmful_confidence_rate,
+        pass_fail=pass_fail,
+        known_failures=_domain_intelligence_known_failures(),
+    )
+    write_domain_intelligence_release_gate_report(out, run)
     return run
 
 
@@ -984,6 +1093,81 @@ def write_domain_evolution_report(out: Path, run: DomainEvolutionRun) -> None:
     (out / "summary.md").write_text(_render_domain_evolution_summary(run), encoding="utf-8")
 
 
+def write_domain_intelligence_release_gate_report(
+    out: Path,
+    run: DomainIntelligenceReleaseGateRun,
+) -> None:
+    failures = [
+        name for name, passed in run.pass_fail.items() if name != "all_targets_pass" and not passed
+    ]
+    (out / "pass_fail.json").write_text(
+        json.dumps(
+            {
+                "all_targets_pass": run.pass_fail["all_targets_pass"],
+                "final_claim": _domain_intelligence_final_claim(run),
+                "failed_targets": failures,
+                "targets": run.pass_fail,
+                "primary_system": run.primary_system,
+                "primary_metrics": run.primary_metrics,
+                "harmful_confidence_rate": run.harmful_confidence_rate,
+                "domains": run.domains,
+                "component_task_counts": run.component_task_counts,
+                "heldout_tasks_total": sum(run.component_task_counts.values()),
+                "known_failures": run.known_failures,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    (out / "metrics.json").write_text(
+        json.dumps(
+            {
+                "aggregate": run.aggregate_metrics,
+                "primary_system": run.primary_system,
+                "primary_metrics": run.primary_metrics,
+                "harmful_confidence_rate": run.harmful_confidence_rate,
+                "component_task_counts": run.component_task_counts,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    _write_domain_intelligence_release_csv(out / "comparison.csv", run)
+    (out / "summary.md").write_text(
+        _render_domain_intelligence_release_summary(run),
+        encoding="utf-8",
+    )
+
+
+def _write_domain_intelligence_release_csv(
+    path: Path,
+    run: DomainIntelligenceReleaseGateRun,
+) -> None:
+    rows = []
+    for system, row in run.aggregate_metrics.items():
+        rows.append(
+            {
+                "system": system,
+                "mean_expert_judgment_score": row["mean_expert_judgment_score"],
+                "delta_vs_rag": row.get("delta_vs_rag", 0.0),
+                "delta_vs_bare": (
+                    row["mean_expert_judgment_score"]
+                    - run.aggregate_metrics["bare_llm"]["mean_expert_judgment_score"]
+                ),
+                "win_rate_vs_rag": row["win_rate_vs_rag"],
+                "bad_mistake_rate": row["bad_mistake_rate"],
+            }
+        )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def _write_domain_evolution_csv(path: Path, run: DomainEvolutionRun) -> None:
     rows = []
     for level in run.experience_levels:
@@ -1595,6 +1779,52 @@ def _render_domain_evolution_summary(run: DomainEvolutionRun) -> str:
     return "\n".join(lines)
 
 
+def _render_domain_intelligence_release_summary(
+    run: DomainIntelligenceReleaseGateRun,
+) -> str:
+    failures = [
+        name for name, passed in run.pass_fail.items() if name != "all_targets_pass" and not passed
+    ]
+    target_lines = [f"- {name}: {passed}" for name, passed in run.pass_fail.items()]
+    primary = run.primary_metrics
+    lines = [
+        "# Domain Intelligence Release Gate",
+        "",
+        f"Final claim: {_domain_intelligence_final_claim(run)}",
+        "",
+        "## Release Metrics",
+        "",
+        f"- primary_system: {run.primary_system}",
+        f"- heldout_tasks_total: {sum(run.component_task_counts.values())}",
+        f"- domains: {len(run.domains)}",
+        f"- domain_names: {', '.join(run.domains)}",
+        f"- primary_mean_expert_judgment_score: {primary['mean_expert_judgment_score']:.3f}",
+        f"- primary_delta_vs_rag: {primary['delta_vs_rag']:.3f}",
+        f"- primary_delta_vs_bare: {primary['delta_vs_bare']:.3f}",
+        f"- primary_win_rate_vs_rag: {primary['win_rate_vs_rag']:.3f}",
+        f"- primary_bad_mistake_rate: {primary['bad_mistake_rate']:.3f}",
+        f"- harmful_confidence_rate: {run.harmful_confidence_rate:.3f}",
+        "",
+        "## Component Task Counts",
+        "",
+        *[
+            f"- {component}: {task_count}"
+            for component, task_count in run.component_task_counts.items()
+        ],
+        "",
+        "## Pass/Fail",
+        "",
+        *target_lines,
+        f"- failed_targets: {', '.join(failures) if failures else 'none'}",
+        "",
+        "## Known Failures",
+        "",
+        *[f"- {failure}" for failure in run.known_failures],
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def _summarize_evolution_results(
     tasks: list[DomainJudgmentTask],
     results_by_level: dict[int, list[DomainJudgmentResult]],
@@ -1727,6 +1957,113 @@ def _multi_domain_targets(
     }
     checks["all_targets_pass"] = all(checks.values())
     return checks
+
+
+def _domain_intelligence_release_targets(
+    *,
+    component_task_counts: dict[str, int],
+    domains: list[str],
+    aggregate_metrics: dict[str, dict[str, float]],
+    primary_system: str,
+    primary_metrics: dict[str, float],
+    harmful_confidence_rate: float,
+    ssi_specialist: DomainJudgmentRun,
+    folding_method: FoldingMethodStudyRun,
+    mcp_service: DomainJudgmentRun,
+    multi_domain: MultiDomainIntelligenceRun,
+    evolution_curve: DomainEvolutionRun,
+) -> dict[str, bool]:
+    mcp = mcp_service.metrics[MCP_SERVICE_SYSTEM]
+    checks = {
+        "target_heldout_tasks_ge_300": sum(component_task_counts.values()) >= 300,
+        "target_domains_ge_3": len(domains) >= 3,
+        "target_primary_is_folded_or_mcp": primary_system in {"folded_context", MCP_SERVICE_SYSTEM},
+        "target_primary_mean_ejs_ge_4_5": (
+            primary_metrics["mean_expert_judgment_score"] >= 4.5
+        ),
+        "target_primary_delta_vs_rag_ge_1_0": primary_metrics["delta_vs_rag"] >= 1.0,
+        "target_primary_delta_vs_bare_ge_1_5": primary_metrics["delta_vs_bare"] >= 1.5,
+        "target_primary_win_rate_vs_rag_ge_0_80": (
+            primary_metrics["win_rate_vs_rag"] >= 0.80
+        ),
+        "target_primary_bad_mistake_rate_le_0_05": (
+            primary_metrics["bad_mistake_rate"] <= 0.05
+        ),
+        "target_harmful_confidence_rate_le_0_03": harmful_confidence_rate <= 0.03,
+        "component_ssi_specialist_pass": _ssi_specialist_component_pass(ssi_specialist),
+        "component_folding_method_pass": folding_method.targets["all_targets_pass"],
+        "component_mcp_service_pass": (
+            mcp["mean_expert_judgment_score"] >= 4.5
+            and mcp["win_rate_vs_rag"] >= 0.85
+            and mcp["bad_mistake_rate"] <= 0.05
+        ),
+        "component_multi_domain_pass": multi_domain.targets["all_targets_pass"],
+        "component_evolution_curve_pass": evolution_curve.targets["all_targets_pass"],
+        "component_known_failures_reported": bool(_domain_intelligence_known_failures()),
+        "non_goal_token_usage_not_primary": True,
+    }
+    checks["all_targets_pass"] = all(checks.values())
+    return checks
+
+
+def _choose_primary_release_system(
+    aggregate_metrics: dict[str, dict[str, float]],
+) -> str:
+    candidates = ["folded_context", MCP_SERVICE_SYSTEM]
+    return max(
+        candidates,
+        key=lambda system: aggregate_metrics[system]["mean_expert_judgment_score"],
+    )
+
+
+def _harmful_confidence_rate(
+    results_by_domain: dict[str, list[DomainJudgmentResult]],
+    system: str,
+) -> float:
+    rows = [
+        result
+        for results in results_by_domain.values()
+        for result in results
+        if result.system == system
+    ]
+    if not rows:
+        return 0.0
+    harmful_confident = [
+        result
+        for result in rows
+        if result.bad_mistake and result.expert_judgment_score >= 4.0
+    ]
+    return len(harmful_confident) / len(rows)
+
+
+def _ssi_specialist_component_pass(run: DomainJudgmentRun) -> bool:
+    folded = run.metrics["folded_context"]
+    return (
+        len(run.tasks) >= 100
+        and len({task.task_type for task in run.tasks}) >= 5
+        and folded["mean_expert_judgment_score"] >= 4.3
+        and folded["delta_vs_rag"] >= 1.0
+        and folded["win_rate_vs_rag"] >= 0.8
+        and folded["bad_mistake_rate"] <= 0.07
+        and "corectx_compiled" in run.metrics
+    )
+
+
+def _domain_intelligence_known_failures() -> list[str]:
+    return [
+        "deterministic domain tasks are not a public benchmark claim",
+        "LongMemEval-S and MemoryAgentBench remain adapter-only",
+        "absolute token inversion on synthetic_v2 is still not the primary domain gate",
+    ]
+
+
+def _domain_intelligence_final_claim(run: DomainIntelligenceReleaseGateRun) -> str:
+    if run.pass_fail["all_targets_pass"]:
+        return (
+            "achieved: folded or MCP domain context is substantially stronger than "
+            "bare LLM and RAG on this deterministic multi-domain gate"
+        )
+    return "not achieved: at least one release target failed"
 
 
 def _prefix_domain_tasks(

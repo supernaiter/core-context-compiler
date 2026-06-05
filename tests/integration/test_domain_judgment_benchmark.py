@@ -285,3 +285,37 @@ def test_domain_evolution_curve_outputs_target_pass_fail(tmp_path: Path) -> None
     assert "target_ejs_0_to_100_increases: True" in summary
     assert "target_forgetting_rate_le_0_05: True" in summary
     assert "all_targets_pass: True" in summary
+
+
+def test_domain_intelligence_release_gate_outputs_final_claim(tmp_path: Path) -> None:
+    out = tmp_path / "domain_intelligence_release_gate"
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_domain_intelligence_release_gate.py",
+            "--domain-root",
+            str(missing_domain_root),
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    pass_fail = json.loads((out / "pass_fail.json").read_text(encoding="utf-8"))
+    assert pass_fail["all_targets_pass"] is True
+    assert pass_fail["heldout_tasks_total"] >= 300
+    assert len(pass_fail["domains"]) >= 3
+    assert pass_fail["primary_system"] in {"folded_context", "mcp_corectx_service"}
+    assert pass_fail["primary_metrics"]["mean_expert_judgment_score"] >= 4.5
+    assert pass_fail["primary_metrics"]["delta_vs_rag"] >= 1.0
+    assert pass_fail["primary_metrics"]["delta_vs_bare"] >= 1.5
+    assert pass_fail["primary_metrics"]["win_rate_vs_rag"] >= 0.8
+    assert pass_fail["primary_metrics"]["bad_mistake_rate"] <= 0.05
+    assert pass_fail["harmful_confidence_rate"] <= 0.03
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "Final claim: achieved" in summary
+    assert "failed_targets: none" in summary
+    assert "Known Failures" in summary

@@ -17,3 +17,4 @@
 2026-06-05T20:42:48+09:00 | implement Issue #38 as local stdio MCP domain intelligence service without external MCP dependency; expose mcp_corectx_service in SSI benchmark
 2026-06-05T21:41:09+09:00 | implement Issue #39 as deterministic multi-domain transfer benchmark across SSI, BTA/deep-hole drilling, and F1 practice intent labeling
 2026-06-05T22:41:02+09:00 | implement Issue #40 as deterministic domain evolution curve at 0/100/300/600 experience-source levels
+2026-06-05T23:42:36+09:00 | implement Issue #41 as final deterministic Domain Intelligence release gate; token usage remains non-primary and known limitations are reported

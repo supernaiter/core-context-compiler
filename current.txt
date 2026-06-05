@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T22:41:02+09:00
+updated: 2026-06-05T23:42:36+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -283,4 +283,23 @@ done:
 - verification: uv run pytest passed 32 tests
 - verification: uv run ruff check . passed
 next:
-- continue Domain Intelligence roadmap from GitHub Issues
+- GitHub Issue #41 writeback
+- Domain Intelligence roadmap epic #33 remains needs-human/no-autopilot
+- continue GitHub Issues only if new ready issue appears
+- issue: #41
+- domain_intelligence_release_gate:
+  - components: ssi_specialist/folding_method_study/mcp_domain_service/multi_domain_transfer/domain_evolution_curve
+  - heldout_tasks_total: 700
+  - multi_domain_primary_tasks: 300
+  - domains: autonomous_domain_evolver/bta_deep_hole_drilling/f1_practice_intent_labeling
+  - primary_system: mcp_corectx_service
+  - primary_mean_ejs: 4.736666666666666
+  - primary_delta_vs_rag: 1.603333333333333
+  - primary_delta_vs_bare: 2.5866666666666664
+  - primary_win_rate_vs_rag: 1.0
+  - primary_bad_mistake_rate: 0.0
+  - harmful_confidence_rate: 0.0
+  - all_targets_pass: true
+- verification: uv run python scripts/run_domain_intelligence_release_gate.py --out reports/domain_intelligence_release_gate passed
+- verification: uv run pytest passed 33 tests
+- verification: uv run ruff check . passed
