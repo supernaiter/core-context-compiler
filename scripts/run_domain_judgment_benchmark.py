@@ -17,12 +17,14 @@ def main() -> None:
     parser.add_argument("--out", default="reports/domain_judgment_v0")
     parser.add_argument("--domain-root")
     parser.add_argument("--task-count", type=int, default=20)
+    parser.add_argument("--suite", choices=["poc", "ssi_specialist"], default="poc")
     args = parser.parse_args()
     run = run_domain_judgment_benchmark(
         domain=args.domain,
         out_dir=args.out,
         domain_root=args.domain_root,
         task_count=args.task_count,
+        suite=args.suite,
     )
     print(
         json.dumps(

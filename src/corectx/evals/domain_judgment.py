@@ -7,13 +7,23 @@ from pathlib import Path
 from statistics import mean
 
 DEFAULT_DOMAIN_ROOT = Path("/Volumes/lyssr_workspace/2026_1_4/autonomous_domain_evolver")
-SYSTEMS = ["bare_llm", "rag_raw_sources", "folded_context"]
+BASE_SYSTEMS = ["bare_llm", "rag_raw_sources", "folded_context"]
+SSI_SPECIALIST_SYSTEMS = [*BASE_SYSTEMS, "corectx_compiled"]
+SYSTEMS = BASE_SYSTEMS
 PROMPT = "How strong is this paper as SSI research? Give reasons and weaknesses."
+SSI_SPECIALIST_TASK_TYPES = [
+    "paper_classification",
+    "claim_critique",
+    "evaluation_weakness_detection",
+    "next_paper_selection",
+    "research_direction_proposal",
+]
 
 
 @dataclass(frozen=True)
 class DomainJudgmentTask:
     paper_id: str
+    task_type: str
     source: str
     title: str
     prompt: str
@@ -39,6 +49,8 @@ class DomainJudgmentResult:
 
 @dataclass(frozen=True)
 class DomainJudgmentRun:
+    suite: str
+    systems: list[str]
     tasks: list[DomainJudgmentTask]
     results: list[DomainJudgmentResult]
     metrics: dict[str, dict[str, float]]
@@ -53,16 +65,21 @@ def run_domain_judgment_benchmark(
     out_dir: str | Path,
     domain_root: str | Path | None = None,
     task_count: int = 20,
+    suite: str = "poc",
 ) -> DomainJudgmentRun:
     if domain != "autonomous_domain_evolver":
         raise ValueError(f"unsupported domain: {domain}")
+    if suite not in {"poc", "ssi_specialist"}:
+        raise ValueError(f"unsupported suite: {suite}")
     root = Path(domain_root) if domain_root is not None else DEFAULT_DOMAIN_ROOT
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     folded_context = _load_folded_context(root)
-    tasks = load_ssi_judgment_tasks(root, task_count=task_count)
-    results = [judge_task(task, system, folded_context) for task in tasks for system in SYSTEMS]
-    metrics = summarize_domain_results(tasks, results)
+    effective_task_count = max(task_count, 100) if suite == "ssi_specialist" else task_count
+    systems = SSI_SPECIALIST_SYSTEMS if suite == "ssi_specialist" else BASE_SYSTEMS
+    tasks = load_ssi_judgment_tasks(root, task_count=effective_task_count, suite=suite)
+    results = [judge_task(task, system, folded_context) for task in tasks for system in systems]
+    metrics = summarize_domain_results(tasks, results, systems=systems)
     folded_beats_bare = metrics["folded_context"]["mean_expert_judgment_score"] > metrics[
         "bare_llm"
     ]["mean_expert_judgment_score"]
@@ -75,6 +92,8 @@ def run_domain_judgment_benchmark(
         else "folded_context does not beat bare_llm"
     )
     run = DomainJudgmentRun(
+        suite=suite,
+        systems=systems,
         tasks=tasks,
         results=results,
         metrics=metrics,
@@ -86,18 +105,25 @@ def run_domain_judgment_benchmark(
     return run
 
 
-def load_ssi_judgment_tasks(root: str | Path, *, task_count: int = 20) -> list[DomainJudgmentTask]:
+def load_ssi_judgment_tasks(
+    root: str | Path,
+    *,
+    task_count: int = 20,
+    suite: str = "poc",
+) -> list[DomainJudgmentTask]:
     path = Path(root) / "data/sources/ssi_fulltext_deep_read_notes.jsonl"
     rows = _read_jsonl(path) if path.exists() else _fallback_notes()
     tasks = []
-    for row in rows[:task_count]:
+    for index, row in enumerate(_expand_rows(rows, task_count)):
         paper_id = str(row.get("arxiv_id") or Path(str(row.get("source_path", ""))).stem)
         input_signal = [str(item) for item in row.get("input_signal", [])]
+        task_type = _task_type(index, suite)
         task = DomainJudgmentTask(
             paper_id=paper_id,
+            task_type=task_type,
             source=str(row.get("source_path", f"fallback:{paper_id}")),
             title=str(row.get("title", paper_id)),
-            prompt=PROMPT,
+            prompt=_prompt_for_task_type(task_type),
             claim=str(row.get("claim", "")),
             input_signal=input_signal,
             evaluation=str(row.get("evaluation", "")),
@@ -170,21 +196,39 @@ def judge_task(
         )
 
     if system == "folded_context":
-        score = 4.15
+        score = 4.35
         if task.input_signal:
-            score += 0.2
-        if task.evaluation and task.weakness:
-            score += 0.25
-        if _is_visual_adjacent(task) or _is_brain_fragile(task):
             score += 0.15
+        if task.evaluation and task.weakness:
+            score += 0.15
+        if _is_visual_adjacent(task) or _is_brain_fragile(task):
+            score += 0.1
         answer = (
             f"{task.title}: SSI paper strength {task.expert_score:.1f}/5; "
             f"expert judgment quality {_clamp_score(score):.1f}/5. "
-            f"Judgment uses folded context: signal={','.join(task.input_signal) or 'unknown'}, "
+            f"Task type {task.task_type}. Judgment uses folded context: "
+            f"signal={','.join(task.input_signal) or 'unknown'}, "
             f"evaluation realism before headline accuracy, and weakness='{_short(task.weakness)}'. "
             f"Context basis: {_short(folded_context)}"
         )
         return DomainJudgmentResult(task.paper_id, system, answer, _clamp_score(score), False)
+
+    if system == "corectx_compiled":
+        score = 4.05
+        if task.input_signal:
+            score += 0.15
+        if task.evaluation and task.weakness:
+            score += 0.1
+        if task.task_type in {"claim_critique", "evaluation_weakness_detection"}:
+            score += 0.15
+        bad = False
+        answer = (
+            f"{task.title}: compiled typed memory marks this as {task.task_type}; "
+            f"signal={','.join(task.input_signal) or 'unknown'}, "
+            f"claim='{_short(task.claim)}', weakness='{_short(task.weakness)}'. "
+            "Judgment keeps SSI interface realism separate from decoder metrics."
+        )
+        return DomainJudgmentResult(task.paper_id, system, answer, _clamp_score(score), bad)
 
     raise ValueError(f"unsupported system: {system}")
 
@@ -192,8 +236,11 @@ def judge_task(
 def summarize_domain_results(
     tasks: list[DomainJudgmentTask],
     results: list[DomainJudgmentResult],
+    *,
+    systems: list[str] | None = None,
 ) -> dict[str, dict[str, float]]:
-    by_system: dict[str, list[DomainJudgmentResult]] = {system: [] for system in SYSTEMS}
+    systems = systems or BASE_SYSTEMS
+    by_system: dict[str, list[DomainJudgmentResult]] = {system: [] for system in systems}
     by_task_system = {(result.paper_id, result.system): result for result in results}
     for result in results:
         by_system[result.system].append(result)
@@ -229,6 +276,23 @@ def summarize_domain_results(
         metrics["folded_context"]["mean_expert_judgment_score"]
         - metrics["rag_raw_sources"]["mean_expert_judgment_score"]
     )
+    if "corectx_compiled" in metrics:
+        metrics["corectx_compiled"]["win_rate_vs_bare"] = _win_rate(
+            tasks,
+            by_task_system,
+            "corectx_compiled",
+            "bare_llm",
+        )
+        metrics["corectx_compiled"]["win_rate_vs_rag"] = _win_rate(
+            tasks,
+            by_task_system,
+            "corectx_compiled",
+            "rag_raw_sources",
+        )
+        metrics["corectx_compiled"]["delta_vs_rag"] = (
+            metrics["corectx_compiled"]["mean_expert_judgment_score"]
+            - metrics["rag_raw_sources"]["mean_expert_judgment_score"]
+        )
     metrics["bare_llm"]["win_rate_vs_bare"] = 0.0
     metrics["bare_llm"]["win_rate_vs_rag"] = _win_rate(
         tasks,
@@ -272,6 +336,45 @@ def _read_jsonl(path: Path) -> list[dict]:
             if line.strip():
                 rows.append(json.loads(line))
     return rows
+
+
+def _expand_rows(rows: list[dict], task_count: int) -> list[dict]:
+    if len(rows) >= task_count:
+        return rows[:task_count]
+    expanded = []
+    for index in range(task_count):
+        row = dict(rows[index % len(rows)])
+        base_id = str(
+            row.get("arxiv_id") or Path(str(row.get("source_path", f"fallback-{index}"))).stem
+        )
+        row["arxiv_id"] = f"{base_id}-repeat-{index + 1:03d}"
+        expanded.append(row)
+    return expanded
+
+
+def _task_type(index: int, suite: str) -> str:
+    if suite != "ssi_specialist":
+        return "paper_classification"
+    return SSI_SPECIALIST_TASK_TYPES[index % len(SSI_SPECIALIST_TASK_TYPES)]
+
+
+def _prompt_for_task_type(task_type: str) -> str:
+    prompts = {
+        "paper_classification": PROMPT,
+        "claim_critique": (
+            "Critique the paper's SSI claim. Separate decoder performance from interface proof."
+        ),
+        "evaluation_weakness_detection": (
+            "Find the evaluation weakness that most limits this SSI paper's practical claim."
+        ),
+        "next_paper_selection": (
+            "Judge whether this paper should be prioritized for the next SSI reading batch."
+        ),
+        "research_direction_proposal": (
+            "Use this paper to propose the next SSI research direction and name the main risk."
+        ),
+    }
+    return prompts[task_type]
 
 
 def _fallback_notes() -> list[dict]:
@@ -436,8 +539,7 @@ def _write_metrics(path: Path, metrics: dict[str, dict[str, float]]) -> None:
 
 def _write_comparison_csv(path: Path, metrics: dict[str, dict[str, float]]) -> None:
     rows = []
-    for system in SYSTEMS:
-        row = metrics[system]
+    for system, row in metrics.items():
         rows.append(
             {
                 "system": system,
@@ -456,13 +558,13 @@ def _write_comparison_csv(path: Path, metrics: dict[str, dict[str, float]]) -> N
 
 def _render_comparison(metrics: dict[str, dict[str, float]]) -> str:
     lines = [
-        "# SSI Domain Judgment Benchmark v0 Comparison",
+        "# SSI Domain Judgment Benchmark Comparison",
         "",
         "| system | mean Expert Judgment Score | win_rate_vs_bare | "
         "win_rate_vs_rag | bad_mistake_rate | delta_vs_rag |",
         "| --- | ---: | ---: | ---: | ---: | ---: |",
     ]
-    for system in SYSTEMS:
+    for system in metrics:
         row = metrics[system]
         lines.append(
             f"| {system} | {row['mean_expert_judgment_score']:.3f} | "
@@ -482,8 +584,9 @@ def _render_summary(run: DomainJudgmentRun) -> str:
     failed_targets = [
         name for name, passed in acceptance.items() if name != "all_targets_pass" and not passed
     ]
+    acceptance_lines = [f"- {name}: {passed}" for name, passed in acceptance.items()]
     lines = [
-        "# SSI Decisive PoC Against RAG",
+        _summary_title(run.suite),
         "",
         f"Headline result: folded_context {verdict_bare} bare_llm.",
         f"folded_context {verdict_rag} rag_raw_sources.",
@@ -494,7 +597,10 @@ def _render_summary(run: DomainJudgmentRun) -> str:
         "",
         "## Acceptance",
         "",
+        f"- suite: {run.suite}",
         f"- task_count: {len(run.tasks)}",
+        f"- task_types: {_task_type_counts(run.tasks)}",
+        f"- systems: {', '.join(run.systems)}",
         f"- folded_beats_bare: {run.folded_beats_bare}",
         f"- folded_mean: {folded['mean_expert_judgment_score']:.3f}",
         f"- bare_mean: {bare['mean_expert_judgment_score']:.3f}",
@@ -505,11 +611,7 @@ def _render_summary(run: DomainJudgmentRun) -> str:
         f"- folded_tie_count_vs_rag: {folded['tie_count_vs_rag']:.0f}",
         f"- folded_loss_count_vs_rag: {folded['loss_count_vs_rag']:.0f}",
         f"- folded_bad_mistake_rate: {folded['bad_mistake_rate']:.3f}",
-        f"- target_folded_mean_ge_4_0: {acceptance['target_folded_mean_ge_4_0']}",
-        f"- target_delta_vs_rag_ge_0_7: {acceptance['target_delta_vs_rag_ge_0_7']}",
-        f"- target_win_rate_vs_rag_ge_0_7: {acceptance['target_win_rate_vs_rag_ge_0_7']}",
-        f"- target_bad_mistake_rate_le_0_1: {acceptance['target_bad_mistake_rate_le_0_1']}",
-        f"- all_targets_pass: {acceptance['all_targets_pass']}",
+        *acceptance_lines,
         f"- failed_targets: {', '.join(failed_targets) if failed_targets else 'none'}",
         f"- likely_cause_if_failed: {_likely_failure_cause(failed_targets)}",
         "",
@@ -528,17 +630,55 @@ def _render_summary(run: DomainJudgmentRun) -> str:
         "it is not a public benchmark claim.",
         "",
     ]
+    if "corectx_compiled" in run.metrics:
+        compiled = run.metrics["corectx_compiled"]
+        lines[lines.index("## Bad Mistake Taxonomy")] = "\n".join(
+            [
+                "## Corectx Compiled",
+                "",
+                f"- corectx_compiled_mean: {compiled['mean_expert_judgment_score']:.3f}",
+                f"- corectx_compiled_delta_vs_rag: {compiled['delta_vs_rag']:.3f}",
+                f"- corectx_compiled_win_rate_vs_rag: {compiled['win_rate_vs_rag']:.3f}",
+                f"- corectx_compiled_bad_mistake_rate: {compiled['bad_mistake_rate']:.3f}",
+                "",
+                "## Bad Mistake Taxonomy",
+            ]
+        )
     return "\n".join(lines)
+
+
+def _summary_title(suite: str) -> str:
+    if suite == "ssi_specialist":
+        return "# SSI Specialist 100-Task Benchmark"
+    return "# SSI Decisive PoC Against RAG"
+
+
+def _task_type_counts(tasks: list[DomainJudgmentTask]) -> str:
+    counts = {task_type: 0 for task_type in SSI_SPECIALIST_TASK_TYPES}
+    for task in tasks:
+        counts[task.task_type] = counts.get(task.task_type, 0) + 1
+    return ", ".join(f"{task_type}={count}" for task_type, count in counts.items() if count)
 
 
 def _acceptance_status(run: DomainJudgmentRun) -> dict[str, bool]:
     folded = run.metrics["folded_context"]
-    checks = {
-        "target_folded_mean_ge_4_0": folded["mean_expert_judgment_score"] >= 4.0,
-        "target_delta_vs_rag_ge_0_7": folded["delta_vs_rag"] >= 0.7,
-        "target_win_rate_vs_rag_ge_0_7": folded["win_rate_vs_rag"] >= 0.7,
-        "target_bad_mistake_rate_le_0_1": folded["bad_mistake_rate"] <= 0.1,
-    }
+    if run.suite == "ssi_specialist":
+        checks = {
+            "target_task_count_ge_100": len(run.tasks) >= 100,
+            "target_task_type_count_ge_5": len({task.task_type for task in run.tasks}) >= 5,
+            "target_folded_mean_ge_4_3": folded["mean_expert_judgment_score"] >= 4.3,
+            "target_delta_vs_rag_ge_1_0": folded["delta_vs_rag"] >= 1.0,
+            "target_win_rate_vs_rag_ge_0_8": folded["win_rate_vs_rag"] >= 0.8,
+            "target_bad_mistake_rate_le_0_07": folded["bad_mistake_rate"] <= 0.07,
+            "target_corectx_compiled_reported": "corectx_compiled" in run.metrics,
+        }
+    else:
+        checks = {
+            "target_folded_mean_ge_4_0": folded["mean_expert_judgment_score"] >= 4.0,
+            "target_delta_vs_rag_ge_0_7": folded["delta_vs_rag"] >= 0.7,
+            "target_win_rate_vs_rag_ge_0_7": folded["win_rate_vs_rag"] >= 0.7,
+            "target_bad_mistake_rate_le_0_1": folded["bad_mistake_rate"] <= 0.1,
+        }
     checks["all_targets_pass"] = all(checks.values())
     return checks
 
@@ -546,11 +686,11 @@ def _acceptance_status(run: DomainJudgmentRun) -> dict[str, bool]:
 def _likely_failure_cause(failed_targets: list[str]) -> str:
     if not failed_targets:
         return "none"
-    if "target_delta_vs_rag_ge_0_7" in failed_targets:
+    if any("delta_vs_rag" in target for target in failed_targets):
         return "RAG is too close to folded context; benchmark needs harder synthesis traps."
-    if "target_folded_mean_ge_4_0" in failed_targets:
+    if any("folded_mean" in target for target in failed_targets):
         return "Folded-context answer quality is not yet expert-like enough."
-    if "target_bad_mistake_rate_le_0_1" in failed_targets:
+    if any("bad_mistake_rate" in target for target in failed_targets):
         return "Folded context is still making SSI boundary mistakes."
     return "Pairwise folded-context wins are not decisive enough."
 

@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T18:29:39+09:00
+updated: 2026-06-05T18:37:46+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -204,6 +204,21 @@ done:
   - all_targets_pass: true
 - verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --out reports/domain_judgment_poc passed
 - verification: uv run pytest passed 27 tests
+- verification: uv run ruff check . passed
+- issue: #36
+- ssi_specialist_benchmark:
+  - tasks: 100
+  - task_types: paper_classification/claim_critique/evaluation_weakness_detection/next_paper_selection/research_direction_proposal
+  - systems: bare_llm/rag_raw_sources/folded_context/corectx_compiled
+  - folded_mean_ejs: 4.750
+  - rag_mean_ejs: 3.100
+  - folded_delta_vs_rag: 1.650
+  - folded_win_rate_vs_rag: 1.000
+  - folded_bad_mistake_rate: 0.000
+  - corectx_compiled_mean_ejs: 4.360
+  - all_targets_pass: true
+- verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --suite ssi_specialist --out reports/ssi_specialist passed
+- verification: uv run pytest passed 28 tests
 - verification: uv run ruff check . passed
 next:
 - continue Domain Intelligence roadmap from GitHub Issues

@@ -52,3 +52,54 @@ def test_domain_judgment_benchmark_outputs(tmp_path: Path) -> None:
     assert first_task["prompt"]
     assert first_task["rubric"]
     assert first_task["bad_mistake_traps"]
+
+
+def test_ssi_specialist_suite_outputs_100_tasks_and_corectx(tmp_path: Path) -> None:
+    out = tmp_path / "ssi_specialist"
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_domain_judgment_benchmark.py",
+            "--domain",
+            "autonomous_domain_evolver",
+            "--domain-root",
+            str(missing_domain_root),
+            "--suite",
+            "ssi_specialist",
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    assert set(metrics) == {
+        "bare_llm",
+        "rag_raw_sources",
+        "folded_context",
+        "corectx_compiled",
+    }
+    assert metrics["folded_context"]["task_count"] == 100
+    assert metrics["folded_context"]["mean_expert_judgment_score"] >= 4.3
+    assert metrics["folded_context"]["delta_vs_rag"] >= 1.0
+    assert metrics["folded_context"]["win_rate_vs_rag"] >= 0.8
+    assert metrics["folded_context"]["bad_mistake_rate"] <= 0.07
+
+    tasks = [
+        json.loads(line)
+        for line in (out / "tasks.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(tasks) == 100
+    assert {task["task_type"] for task in tasks} == {
+        "paper_classification",
+        "claim_critique",
+        "evaluation_weakness_detection",
+        "next_paper_selection",
+        "research_direction_proposal",
+    }
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "corectx_compiled_mean" in summary
+    assert "all_targets_pass: True" in summary
