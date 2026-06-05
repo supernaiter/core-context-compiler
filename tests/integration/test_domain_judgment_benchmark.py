@@ -244,3 +244,44 @@ def test_multi_domain_intelligence_eval_outputs_transfer_report(tmp_path: Path) 
     assert "## Per-Domain Results" in summary
     assert "losing_domains:" in summary
     assert "all_targets_pass: True" in summary
+
+
+def test_domain_evolution_curve_outputs_target_pass_fail(tmp_path: Path) -> None:
+    out = tmp_path / "domain_evolution_curve"
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_domain_evolution_curve.py",
+            "--domain",
+            "autonomous_domain_evolver",
+            "--domain-root",
+            str(missing_domain_root),
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    levels = metrics["levels"]
+    assert metrics["experience_levels"] == [0, 100, 300, 600]
+    assert metrics["targets"]["all_targets_pass"] is True
+    assert levels["100"]["mean_expert_judgment_score"] > levels["0"][
+        "mean_expert_judgment_score"
+    ]
+    assert levels["300"]["mean_expert_judgment_score"] >= (
+        levels["100"]["mean_expert_judgment_score"] - 0.2
+    )
+    assert levels["600"]["mean_expert_judgment_score"] >= (
+        levels["300"]["mean_expert_judgment_score"] - 0.2
+    )
+    assert max(row["forgetting_rate"] for row in levels.values()) <= 0.05
+    assert levels["600"]["bad_mistake_rate"] < levels["0"]["bad_mistake_rate"]
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "## Target Pass/Fail" in summary
+    assert "target_ejs_0_to_100_increases: True" in summary
+    assert "target_forgetting_rate_le_0_05: True" in summary
+    assert "all_targets_pass: True" in summary

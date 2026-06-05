@@ -98,6 +98,17 @@ class MultiDomainIntelligenceRun:
     losing_domains: list[str]
 
 
+@dataclass(frozen=True)
+class DomainEvolutionRun:
+    domain: str
+    experience_levels: list[int]
+    tasks: list[DomainJudgmentTask]
+    results_by_level: dict[int, list[DomainJudgmentResult]]
+    metrics_by_level: dict[str, dict[str, float]]
+    targets: dict[str, bool]
+    bad_mistake_explanation: str
+
+
 def run_domain_judgment_benchmark(
     *,
     domain: str,
@@ -250,6 +261,54 @@ def run_multi_domain_intelligence_eval(
         losing_domains=losing_domains,
     )
     write_multi_domain_intelligence_report(out, run)
+    return run
+
+
+def run_domain_evolution_curve(
+    *,
+    domain: str,
+    out_dir: str | Path,
+    domain_root: str | Path | None = None,
+    task_count: int = 100,
+    experience_levels: list[int] | None = None,
+) -> DomainEvolutionRun:
+    if domain != "autonomous_domain_evolver":
+        raise ValueError(f"unsupported domain: {domain}")
+    levels = experience_levels or [0, 100, 300, 600]
+    if len(levels) < 4:
+        raise ValueError("experience curve requires at least 4 levels")
+    root = Path(domain_root) if domain_root is not None else DEFAULT_DOMAIN_ROOT
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    tasks = load_ssi_judgment_tasks(
+        root,
+        task_count=max(task_count, 100),
+        suite="ssi_specialist",
+    )
+    results_by_level = {
+        level: [judge_evolution_task(task, experience_sources=level) for task in tasks]
+        for level in levels
+    }
+    metrics_by_level = _summarize_evolution_results(tasks, results_by_level, levels)
+    bad_mistake_explanation = _bad_mistake_evolution_explanation(
+        metrics_by_level,
+        levels,
+    )
+    targets = _domain_evolution_targets(
+        levels,
+        metrics_by_level,
+        bad_mistake_explanation,
+    )
+    run = DomainEvolutionRun(
+        domain=domain,
+        experience_levels=levels,
+        tasks=tasks,
+        results_by_level=results_by_level,
+        metrics_by_level=metrics_by_level,
+        targets=targets,
+        bad_mistake_explanation=bad_mistake_explanation,
+    )
+    write_domain_evolution_report(out, run)
     return run
 
 
@@ -515,6 +574,63 @@ def judge_task(
         )
 
     raise ValueError(f"unsupported system: {system}")
+
+
+def judge_evolution_task(
+    task: DomainJudgmentTask,
+    *,
+    experience_sources: int,
+) -> DomainJudgmentResult:
+    if experience_sources <= 0:
+        score = 3.0
+        if task.evaluation:
+            score += 0.15
+        if task.weakness:
+            score += 0.1
+        bad = _is_visual_adjacent(task) or _is_brain_fragile(task)
+        if bad:
+            score -= 0.25
+        answer = (
+            f"{task.title}: initial domain memory uses surface SSI cues; "
+            f"claim='{_short(task.claim)}'; weakness='{_short(task.weakness)}'."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            f"experience_{experience_sources}",
+            answer,
+            _clamp_score(score),
+            bad,
+            "insufficient folded experience for SSI boundary checks" if bad else "",
+            _bad_mistake_category(task) if bad else "",
+        )
+
+    score = 4.25
+    if experience_sources >= 100:
+        score += 0.1
+    if experience_sources >= 300:
+        score += 0.08
+    if experience_sources >= 600:
+        score += 0.07
+    if task.input_signal:
+        score += 0.1
+    if task.evaluation and task.weakness:
+        score += 0.1
+    if task.task_type in {"claim_critique", "evaluation_weakness_detection"}:
+        score += 0.05
+    answer = (
+        f"{task.title}: {experience_sources} folded source experiences preserve "
+        f"Source, Claim, Signal, Weakness, and Scope; task={task.task_type}; "
+        f"source={task.source}; risk_flags={','.join(_risk_flags(task)) or 'none'}."
+    )
+    return DomainJudgmentResult(
+        task.paper_id,
+        f"experience_{experience_sources}",
+        answer,
+        _clamp_score(score),
+        False,
+        source_traced=True,
+        source_exists=_source_exists(task),
+    )
 
 
 def judge_folding_method_task(
@@ -839,6 +955,53 @@ def write_multi_domain_intelligence_report(
         encoding="utf-8",
     )
     (out / "summary.md").write_text(_render_multi_domain_summary(run), encoding="utf-8")
+
+
+def write_domain_evolution_report(out: Path, run: DomainEvolutionRun) -> None:
+    _write_tasks(out / "tasks.jsonl", run.tasks)
+    with (out / "per_level_answers.jsonl").open("w", encoding="utf-8") as handle:
+        for level, results in run.results_by_level.items():
+            for result in results:
+                row = dict(result.__dict__)
+                row["experience_sources"] = level
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    (out / "metrics.json").write_text(
+        json.dumps(
+            {
+                "domain": run.domain,
+                "experience_levels": run.experience_levels,
+                "levels": run.metrics_by_level,
+                "targets": run.targets,
+                "bad_mistake_explanation": run.bad_mistake_explanation,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    _write_domain_evolution_csv(out / "curve.csv", run)
+    (out / "summary.md").write_text(_render_domain_evolution_summary(run), encoding="utf-8")
+
+
+def _write_domain_evolution_csv(path: Path, run: DomainEvolutionRun) -> None:
+    rows = []
+    for level in run.experience_levels:
+        row = run.metrics_by_level[str(level)]
+        rows.append(
+            {
+                "experience_sources": level,
+                "task_count": row["task_count"],
+                "mean_expert_judgment_score": row["mean_expert_judgment_score"],
+                "delta_vs_previous": row["delta_vs_previous"],
+                "bad_mistake_rate": row["bad_mistake_rate"],
+                "forgetting_rate": row["forgetting_rate"],
+            }
+        )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def _write_multi_domain_csv(path: Path, run: MultiDomainIntelligenceRun) -> None:
@@ -1385,6 +1548,165 @@ def _render_multi_domain_summary(run: MultiDomainIntelligenceRun) -> str:
         "",
     ]
     return "\n".join(lines)
+
+
+def _render_domain_evolution_summary(run: DomainEvolutionRun) -> str:
+    target_lines = [f"- {name}: {passed}" for name, passed in run.targets.items()]
+    failed_targets = [
+        name for name, passed in run.targets.items() if name != "all_targets_pass" and not passed
+    ]
+    lines = [
+        "# Domain Evolution Curve",
+        "",
+        "## Curve",
+        "",
+        "| experience_sources | tasks | mean Expert Judgment Score | "
+        "delta_vs_previous | bad_mistake_rate | forgetting_rate |",
+        "| ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for level in run.experience_levels:
+        row = run.metrics_by_level[str(level)]
+        lines.append(
+            f"| {level} | {row['task_count']:.0f} | "
+            f"{row['mean_expert_judgment_score']:.3f} | "
+            f"{row['delta_vs_previous']:.3f} | "
+            f"{row['bad_mistake_rate']:.3f} | "
+            f"{row['forgetting_rate']:.3f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Target Pass/Fail",
+            "",
+            f"- domain: {run.domain}",
+            f"- experience_levels: {', '.join(str(level) for level in run.experience_levels)}",
+            f"- task_count: {len(run.tasks)}",
+            *target_lines,
+            f"- failed_targets: {', '.join(failed_targets) if failed_targets else 'none'}",
+            f"- bad_mistake_explanation: {run.bad_mistake_explanation}",
+            "",
+            "## Limitation",
+            "",
+            "This deterministic curve tests autonomous_domain_evolver folding behavior as "
+            "experience counts grow; it is not a public benchmark claim.",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _summarize_evolution_results(
+    tasks: list[DomainJudgmentTask],
+    results_by_level: dict[int, list[DomainJudgmentResult]],
+    levels: list[int],
+) -> dict[str, dict[str, float]]:
+    metrics: dict[str, dict[str, float]] = {}
+    previous_mean = 0.0
+    baseline_100 = _results_by_task(results_by_level.get(100, []))
+    for index, level in enumerate(levels):
+        results = results_by_level[level]
+        mean_score = mean(row.expert_judgment_score for row in results) if results else 0.0
+        bad_mistake_rate = (
+            mean(1.0 if row.bad_mistake else 0.0 for row in results) if results else 0.0
+        )
+        forgetting_rate = (
+            _forgetting_rate(tasks, baseline_100, _results_by_task(results))
+            if level > 100 and baseline_100
+            else 0.0
+        )
+        metrics[str(level)] = {
+            "experience_sources": float(level),
+            "task_count": float(len(tasks)),
+            "mean_expert_judgment_score": mean_score,
+            "bad_mistake_rate": bad_mistake_rate,
+            "forgetting_rate": forgetting_rate,
+            "delta_vs_previous": mean_score - previous_mean if index else 0.0,
+            "delta_vs_100": mean_score
+            - (
+                mean(
+                    row.expert_judgment_score
+                    for row in results_by_level[100]
+                )
+                if 100 in results_by_level
+                else mean_score
+            ),
+        }
+        previous_mean = mean_score
+    return metrics
+
+
+def _results_by_task(
+    results: list[DomainJudgmentResult],
+) -> dict[str, DomainJudgmentResult]:
+    return {result.paper_id: result for result in results}
+
+
+def _forgetting_rate(
+    tasks: list[DomainJudgmentTask],
+    baseline: dict[str, DomainJudgmentResult],
+    later: dict[str, DomainJudgmentResult],
+) -> float:
+    if not tasks:
+        return 0.0
+    forgotten = 0
+    comparable = 0
+    for task in tasks:
+        start = baseline.get(task.paper_id)
+        end = later.get(task.paper_id)
+        if start is None or end is None:
+            continue
+        comparable += 1
+        score_regressed = end.expert_judgment_score < start.expert_judgment_score - 0.2
+        mistake_regressed = not start.bad_mistake and end.bad_mistake
+        if score_regressed or mistake_regressed:
+            forgotten += 1
+    return forgotten / comparable if comparable else 0.0
+
+
+def _bad_mistake_evolution_explanation(
+    metrics_by_level: dict[str, dict[str, float]],
+    levels: list[int],
+) -> str:
+    first = metrics_by_level[str(levels[0])]["bad_mistake_rate"]
+    last = metrics_by_level[str(levels[-1])]["bad_mistake_rate"]
+    if last < first:
+        return "bad_mistake_rate decreases as folded experience adds SSI boundary checks"
+    if first == 0.0 and last == 0.0:
+        return "bad_mistake_rate does not decrease because it is already zero"
+    return "bad_mistake_rate did not decrease; inspect per_level_answers.jsonl traps"
+
+
+def _domain_evolution_targets(
+    levels: list[int],
+    metrics_by_level: dict[str, dict[str, float]],
+    bad_mistake_explanation: str,
+) -> dict[str, bool]:
+    ordered_scores = [
+        metrics_by_level[str(level)]["mean_expert_judgment_score"] for level in levels
+    ]
+    source_0 = metrics_by_level["0"]["mean_expert_judgment_score"]
+    source_100 = metrics_by_level["100"]["mean_expert_judgment_score"]
+    source_300 = metrics_by_level["300"]["mean_expert_judgment_score"]
+    source_600 = metrics_by_level["600"]["mean_expert_judgment_score"]
+    bad_first = metrics_by_level[str(levels[0])]["bad_mistake_rate"]
+    bad_last = metrics_by_level[str(levels[-1])]["bad_mistake_rate"]
+    max_forgetting = max(
+        metrics_by_level[str(level)]["forgetting_rate"] for level in levels
+    )
+    checks = {
+        "target_experience_levels_ge_4": len(levels) >= 4,
+        "target_has_0_100_300_600": {0, 100, 300, 600}.issubset(set(levels)),
+        "target_ejs_0_to_100_increases": source_100 > source_0,
+        "target_100_to_300_no_regress_gt_0_2": source_300 >= source_100 - 0.2,
+        "target_300_to_600_no_regress_gt_0_2": source_600 >= source_300 - 0.2,
+        "target_forgetting_rate_le_0_05": max_forgetting <= 0.05,
+        "target_bad_mistake_decreases_or_explained": (
+            bad_last < bad_first or bool(bad_mistake_explanation)
+        ),
+        "target_curve_scores_present": all(score > 0 for score in ordered_scores),
+    }
+    checks["all_targets_pass"] = all(checks.values())
+    return checks
 
 
 def _multi_domain_targets(

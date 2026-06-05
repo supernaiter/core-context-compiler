@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T21:41:09+09:00
+updated: 2026-06-05T22:41:02+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -266,6 +266,21 @@ done:
   - all_targets_pass: true
 - verification: uv run python scripts/run_multi_domain_intelligence_eval.py --out reports/multi_domain_intelligence passed
 - verification: uv run pytest passed 31 tests
+- verification: uv run ruff check . passed
+- issue: #40
+- domain_evolution_curve:
+  - levels: 0/100/300/600
+  - tasks: 100
+  - mean_ejs_0: 3.000
+  - mean_ejs_100: 4.570
+  - mean_ejs_300: 4.650
+  - mean_ejs_600: 4.720
+  - forgetting_rate_max: 0.000
+  - bad_mistake_rate_0: 1.000
+  - bad_mistake_rate_600: 0.000
+  - all_targets_pass: true
+- verification: uv run python scripts/run_domain_evolution_curve.py --domain autonomous_domain_evolver --out reports/domain_evolution_curve passed
+- verification: uv run pytest passed 32 tests
 - verification: uv run ruff check . passed
 next:
 - continue Domain Intelligence roadmap from GitHub Issues
