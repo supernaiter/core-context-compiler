@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T23:42:36+09:00
+updated: 2026-06-06T00:39:54+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -282,10 +282,6 @@ done:
 - verification: uv run python scripts/run_domain_evolution_curve.py --domain autonomous_domain_evolver --out reports/domain_evolution_curve passed
 - verification: uv run pytest passed 32 tests
 - verification: uv run ruff check . passed
-next:
-- GitHub Issue #41 writeback
-- Domain Intelligence roadmap epic #33 remains needs-human/no-autopilot
-- continue GitHub Issues only if new ready issue appears
 - issue: #41
 - domain_intelligence_release_gate:
   - components: ssi_specialist/folding_method_study/mcp_domain_service/multi_domain_transfer/domain_evolution_curve
@@ -303,3 +299,28 @@ next:
 - verification: uv run python scripts/run_domain_intelligence_release_gate.py --out reports/domain_intelligence_release_gate passed
 - verification: uv run pytest passed 33 tests
 - verification: uv run ruff check . passed
+- issue: #33
+- no_work_triage:
+  - classification: human-review-ready
+  - ready_issue_count: 0
+  - open_issue_count: 1
+  - existing_human_issue: #33
+  - new_issue_created: false
+  - latest_commit: 1b850bc
+  - release_gate_all_targets_pass: true
+  - primary_system: mcp_corectx_service
+  - primary_mean_ejs: 4.736666666666666
+  - primary_delta_vs_rag: 1.603333333333333
+  - primary_delta_vs_bare: 2.5866666666666664
+  - primary_win_rate_vs_rag: 1.0
+  - primary_bad_mistake_rate: 0.0
+  - weak:
+    - deterministic domain tasks are not a public benchmark claim
+    - LongMemEval-S and MemoryAgentBench remain adapter-only
+    - absolute token inversion on synthetic_v2 remains non-primary
+- verification: uv run pytest passed 33 tests
+- verification: uv run ruff check . passed
+- verification: uv run python scripts/run_domain_intelligence_release_gate.py --out reports/domain_intelligence_release_gate passed
+next:
+- GitHub Issue #33 human review
+- wait for new ready GitHub issue
