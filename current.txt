@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T16:58:10+09:00
+updated: 2026-06-05T17:03:01+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -163,6 +163,13 @@ done:
   - ready_issue_count: 0
   - automation_skill: workspace-autopilot-github
   - safety: direct main commit, no deploy unless issue permits
+- domain_intelligence_roadmap:
+  - epic: #33
+  - ready_issues: #34,#35,#36,#37,#38,#39,#40,#41
+  - north_star: folded context makes LLM much smarter than bare LLM/RAG
+  - primary_metric: Expert Judgment Score
+  - token_metric: non-primary
+  - first_issue: #34 M0 SSI Domain Judgment Benchmark v0
 - weak_result: absolute token inversion still false
 - commit: 8a23476
 - tag: v1.0.0
