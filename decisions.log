@@ -10,3 +10,4 @@
 2026-06-04T10:06:30+09:00 | add milestone tags v0.3.0 through v0.10.0 at audited v1 long-plan commit without moving existing v1.0.0 tag
 2026-06-05T16:58:10+09:00 | initialize GitHub pilot workspace for workspace-autopilot-github; no ready issue created yet
 2026-06-05T17:03:01+09:00 | create Domain Intelligence roadmap issues #33-#41; primary target is Expert Judgment Score, not token efficiency
+2026-06-05T17:16:57+09:00 | implement Issue #34 as deterministic SSI domain judgment benchmark using autonomous_domain_evolver notes/context; keep public/generalization limitation explicit

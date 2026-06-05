@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T17:03:01+09:00
+updated: 2026-06-05T17:16:57+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -181,5 +181,18 @@ done:
 - real LoCoMo mini run passed
 - verification: uv run pytest passed 23 tests
 - verification: uv run ruff check . passed
+- issue: #34
+- domain_judgment_benchmark_v0 implemented
+- SSI heldout judgment tasks: 20
+- systems: bare_llm/rag_raw_sources/folded_context
+- folded_context_mean_EJS: 3.075
+- bare_llm_mean_EJS: 2.075
+- rag_raw_sources_mean_EJS: 2.725
+- folded_win_rate_vs_bare: 1.0
+- folded_win_rate_vs_rag: 1.0
+- folded_bad_mistake_rate: 0.0
+- verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --out reports/domain_judgment_v0 passed
+- verification: uv run pytest passed 27 tests
+- verification: uv run ruff check . passed
 next:
-- expand real public benchmark coverage beyond LoCoMo mini
+- continue Domain Intelligence roadmap from GitHub Issues
