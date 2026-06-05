@@ -149,3 +149,57 @@ def test_folding_method_study_compares_context_methods(tmp_path: Path) -> None:
     assert "target_overgeneralization_rate_le_0_05: True" in summary
     assert "target_source_trace_rate_ge_0_85: True" in summary
     assert "all_targets_pass: True" in summary
+
+
+def test_mcp_domain_service_smoke_and_benchmark(tmp_path: Path) -> None:
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    smoke = subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_mcp_smoke.py",
+            "--domain",
+            "autonomous_domain_evolver",
+            "--domain-root",
+            str(missing_domain_root),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+        capture_output=True,
+        text=True,
+    )
+    smoke_result = json.loads(smoke.stdout)
+    assert smoke_result["status"] == "pass"
+    assert set(smoke_result["structured_json_tools"]) == {
+        "get_domain_context",
+        "judge_paper_strength",
+        "critique_claim",
+        "suggest_next_reading",
+        "explain_judgment",
+    }
+
+    out = tmp_path / "mcp_domain_service"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_domain_judgment_benchmark.py",
+            "--domain",
+            "autonomous_domain_evolver",
+            "--domain-root",
+            str(missing_domain_root),
+            "--system",
+            "mcp_corectx_service",
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    mcp = metrics["mcp_corectx_service"]
+    assert mcp["mean_expert_judgment_score"] >= 4.5
+    assert mcp["win_rate_vs_rag"] >= 0.85
+    assert mcp["bad_mistake_rate"] <= 0.05
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "mcp_loses_to_folded_context:" in summary
+    assert "mcp_loses_to_rag:" in summary
+    assert "all_targets_pass: True" in summary
