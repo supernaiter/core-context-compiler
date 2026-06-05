@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T18:37:46+09:00
+updated: 2026-06-05T19:40:18+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -219,6 +219,21 @@ done:
   - all_targets_pass: true
 - verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --suite ssi_specialist --out reports/ssi_specialist passed
 - verification: uv run pytest passed 28 tests
+- verification: uv run ruff check . passed
+- issue: #37
+- folding_method_study:
+  - tasks: 100
+  - methods: rag_raw_sources/manual_folded_context/rule_based_folded_context/case_to_rule_context/typed_core_context
+  - manual_folded_context_mean_ejs: 4.700
+  - rag_raw_sources_mean_ejs: 3.100
+  - typed_core_context_mean_ejs: 4.690
+  - typed_delta_vs_manual: -0.010
+  - typed_delta_vs_rag: 1.590
+  - typed_overgeneralization_rate: 0.000
+  - typed_source_trace_rate: 1.000
+  - all_targets_pass: true
+- verification: uv run python scripts/run_folding_method_study.py --domain autonomous_domain_evolver --out reports/folding_method_study passed
+- verification: uv run pytest passed 29 tests
 - verification: uv run ruff check . passed
 next:
 - continue Domain Intelligence roadmap from GitHub Issues

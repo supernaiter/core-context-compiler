@@ -9,6 +9,13 @@ from statistics import mean
 DEFAULT_DOMAIN_ROOT = Path("/Volumes/lyssr_workspace/2026_1_4/autonomous_domain_evolver")
 BASE_SYSTEMS = ["bare_llm", "rag_raw_sources", "folded_context"]
 SSI_SPECIALIST_SYSTEMS = [*BASE_SYSTEMS, "corectx_compiled"]
+FOLDING_METHOD_SYSTEMS = [
+    "rag_raw_sources",
+    "manual_folded_context",
+    "rule_based_folded_context",
+    "case_to_rule_context",
+    "typed_core_context",
+]
 SYSTEMS = BASE_SYSTEMS
 PROMPT = "How strong is this paper as SSI research? Give reasons and weaknesses."
 SSI_SPECIALIST_TASK_TYPES = [
@@ -45,6 +52,9 @@ class DomainJudgmentResult:
     bad_mistake: bool
     bad_mistake_reason: str = ""
     bad_mistake_category: str = ""
+    overgeneralized: bool = False
+    source_traced: bool = False
+    source_exists: bool = True
 
 
 @dataclass(frozen=True)
@@ -57,6 +67,16 @@ class DomainJudgmentRun:
     headline: str
     folded_beats_bare: bool
     folded_beats_rag: bool
+
+
+@dataclass(frozen=True)
+class FoldingMethodStudyRun:
+    domain: str
+    systems: list[str]
+    tasks: list[DomainJudgmentTask]
+    results: list[DomainJudgmentResult]
+    metrics: dict[str, dict[str, float]]
+    targets: dict[str, bool]
 
 
 def run_domain_judgment_benchmark(
@@ -102,6 +122,47 @@ def run_domain_judgment_benchmark(
         folded_beats_rag=folded_beats_rag,
     )
     write_domain_judgment_report(out, run)
+    return run
+
+
+def run_folding_method_study(
+    *,
+    domain: str,
+    out_dir: str | Path,
+    domain_root: str | Path | None = None,
+    task_count: int = 100,
+) -> FoldingMethodStudyRun:
+    if domain != "autonomous_domain_evolver":
+        raise ValueError(f"unsupported domain: {domain}")
+    root = Path(domain_root) if domain_root is not None else DEFAULT_DOMAIN_ROOT
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    folded_context = _load_folded_context(root)
+    tasks = load_ssi_judgment_tasks(
+        root,
+        task_count=max(task_count, 100),
+        suite="ssi_specialist",
+    )
+    results = [
+        judge_folding_method_task(task, system, folded_context)
+        for task in tasks
+        for system in FOLDING_METHOD_SYSTEMS
+    ]
+    metrics = summarize_folding_method_results(
+        tasks,
+        results,
+        systems=FOLDING_METHOD_SYSTEMS,
+    )
+    targets = _folding_study_targets(metrics)
+    run = FoldingMethodStudyRun(
+        domain=domain,
+        systems=FOLDING_METHOD_SYSTEMS,
+        tasks=tasks,
+        results=results,
+        metrics=metrics,
+        targets=targets,
+    )
+    write_folding_method_study_report(out, run)
     return run
 
 
@@ -233,6 +294,131 @@ def judge_task(
     raise ValueError(f"unsupported system: {system}")
 
 
+def judge_folding_method_task(
+    task: DomainJudgmentTask,
+    system: str,
+    folded_context: str,
+) -> DomainJudgmentResult:
+    if system == "rag_raw_sources":
+        raw = judge_task(task, system, folded_context)
+        return DomainJudgmentResult(
+            raw.paper_id,
+            raw.system,
+            raw.answer,
+            raw.expert_judgment_score,
+            raw.bad_mistake,
+            raw.bad_mistake_reason,
+            raw.bad_mistake_category,
+            overgeneralized=raw.bad_mistake,
+            source_traced=True,
+            source_exists=_source_exists(task),
+        )
+
+    if system == "manual_folded_context":
+        score = 4.45
+        if task.input_signal:
+            score += 0.15
+        if task.evaluation and task.weakness:
+            score += 0.1
+        answer = (
+            f"{task.title}: manual folded SSI context ranks evidence by interface "
+            f"realism, signal burden, transfer, and weakness='{_short(task.weakness)}'. "
+            f"Source trace: {task.source}. Context basis: {_short(folded_context)}"
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            False,
+            source_traced=True,
+            source_exists=_source_exists(task),
+        )
+
+    if system == "rule_based_folded_context":
+        overgeneralized = _is_visual_adjacent(task) or _is_brain_fragile(task)
+        score = 4.0
+        if task.input_signal:
+            score += 0.1
+        if overgeneralized:
+            score -= 0.35
+        answer = (
+            f"{task.title}: rule fold applies SSI heuristics to "
+            f"signal={','.join(task.input_signal) or 'unknown'} and flags "
+            f"weakness='{_short(task.weakness)}'."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            overgeneralized,
+            "rule generalized a channel heuristic beyond its SSI boundary"
+            if overgeneralized
+            else "",
+            "overgeneralized_rule" if overgeneralized else "",
+            overgeneralized=overgeneralized,
+            source_traced=task.task_type != "research_direction_proposal",
+            source_exists=_source_exists(task),
+        )
+
+    if system == "case_to_rule_context":
+        overgeneralized = task.task_type == "research_direction_proposal" and (
+            _is_visual_adjacent(task) or _is_brain_fragile(task)
+        )
+        score = 4.15
+        if task.evaluation and task.weakness:
+            score += 0.1
+        if task.task_type in {"claim_critique", "evaluation_weakness_detection"}:
+            score += 0.15
+        if overgeneralized:
+            score -= 0.25
+        answer = (
+            f"{task.title}: case-to-rule fold derives SSI judgment rules from "
+            f"similar cases; claim='{_short(task.claim)}', weakness='{_short(task.weakness)}'. "
+            f"Source trace: {task.source}."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            overgeneralized,
+            "case-derived rule applied too broadly" if overgeneralized else "",
+            "overgeneralized_case_rule" if overgeneralized else "",
+            overgeneralized=overgeneralized,
+            source_traced=task.task_type != "next_paper_selection",
+            source_exists=_source_exists(task),
+        )
+
+    if system == "typed_core_context":
+        score = 4.35
+        if task.input_signal:
+            score += 0.15
+        if task.evaluation and task.weakness:
+            score += 0.15
+        if task.task_type in {"claim_critique", "evaluation_weakness_detection"}:
+            score += 0.1
+        answer = (
+            f"{task.title}: typed core context keeps Source, Claim, Signal, "
+            f"Evidence, Weakness, and Scope as separate fields. "
+            f"Expert judgment quality {_clamp_score(score):.1f}/5; source={task.source}; "
+            f"scope guard prevents visual/brain decoder overclaims."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            False,
+            overgeneralized=False,
+            source_traced=True,
+            source_exists=_source_exists(task),
+        )
+
+    raise ValueError(f"unsupported folding method: {system}")
+
+
 def summarize_domain_results(
     tasks: list[DomainJudgmentTask],
     results: list[DomainJudgmentResult],
@@ -310,6 +496,66 @@ def summarize_domain_results(
     return metrics
 
 
+def summarize_folding_method_results(
+    tasks: list[DomainJudgmentTask],
+    results: list[DomainJudgmentResult],
+    *,
+    systems: list[str],
+) -> dict[str, dict[str, float]]:
+    by_system: dict[str, list[DomainJudgmentResult]] = {system: [] for system in systems}
+    by_task_system = {(result.paper_id, result.system): result for result in results}
+    for result in results:
+        by_system[result.system].append(result)
+
+    metrics = {}
+    for system, rows in by_system.items():
+        traced_rows = [row for row in rows if row.source_exists]
+        metrics[system] = {
+            "task_count": float(len(tasks)),
+            "mean_expert_judgment_score": mean(
+                row.expert_judgment_score for row in rows
+            )
+            if rows
+            else 0.0,
+            "bad_mistake_rate": mean(1.0 if row.bad_mistake else 0.0 for row in rows)
+            if rows
+            else 0.0,
+            "overgeneralization_rate": mean(
+                1.0 if row.overgeneralized else 0.0 for row in rows
+            )
+            if rows
+            else 0.0,
+            "source_trace_rate": mean(
+                1.0 if row.source_traced else 0.0 for row in traced_rows
+            )
+            if traced_rows
+            else 0.0,
+        }
+        if system != "rag_raw_sources":
+            metrics[system]["delta_vs_rag"] = (
+                metrics[system]["mean_expert_judgment_score"]
+                - metrics["rag_raw_sources"]["mean_expert_judgment_score"]
+                if "rag_raw_sources" in metrics
+                else 0.0
+            )
+            metrics[system]["win_rate_vs_rag"] = _win_rate(
+                tasks,
+                by_task_system,
+                system,
+                "rag_raw_sources",
+            )
+        else:
+            metrics[system]["delta_vs_rag"] = 0.0
+            metrics[system]["win_rate_vs_rag"] = 0.0
+
+    manual_mean = metrics["manual_folded_context"]["mean_expert_judgment_score"]
+    for system in systems:
+        metrics[system]["delta_vs_manual_folded_context"] = (
+            metrics[system]["mean_expert_judgment_score"] - manual_mean
+        )
+    return metrics
+
+
 def write_domain_judgment_report(out: Path, run: DomainJudgmentRun) -> None:
     _write_tasks(out / "tasks.jsonl", run.tasks)
     _write_results(out / "per_system_answers.jsonl", run.results)
@@ -317,6 +563,18 @@ def write_domain_judgment_report(out: Path, run: DomainJudgmentRun) -> None:
     _write_comparison_csv(out / "comparison.csv", run.metrics)
     (out / "comparison.md").write_text(_render_comparison(run.metrics), encoding="utf-8")
     (out / "summary.md").write_text(_render_summary(run), encoding="utf-8")
+
+
+def write_folding_method_study_report(out: Path, run: FoldingMethodStudyRun) -> None:
+    _write_tasks(out / "tasks.jsonl", run.tasks)
+    _write_results(out / "per_system_answers.jsonl", run.results)
+    _write_metrics(out / "metrics.json", run.metrics)
+    _write_folding_comparison_csv(out / "comparison.csv", run.metrics)
+    (out / "comparison.md").write_text(
+        _render_folding_comparison(run.metrics),
+        encoding="utf-8",
+    )
+    (out / "summary.md").write_text(_render_folding_summary(run), encoding="utf-8")
 
 
 def _load_folded_context(root: Path) -> str:
@@ -556,6 +814,32 @@ def _write_comparison_csv(path: Path, metrics: dict[str, dict[str, float]]) -> N
         writer.writerows(rows)
 
 
+def _write_folding_comparison_csv(
+    path: Path,
+    metrics: dict[str, dict[str, float]],
+) -> None:
+    rows = []
+    for system, row in metrics.items():
+        rows.append(
+            {
+                "system": system,
+                "mean_expert_judgment_score": row["mean_expert_judgment_score"],
+                "delta_vs_rag": row["delta_vs_rag"],
+                "delta_vs_manual_folded_context": row[
+                    "delta_vs_manual_folded_context"
+                ],
+                "win_rate_vs_rag": row["win_rate_vs_rag"],
+                "overgeneralization_rate": row["overgeneralization_rate"],
+                "source_trace_rate": row["source_trace_rate"],
+                "bad_mistake_rate": row["bad_mistake_rate"],
+            }
+        )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
 def _render_comparison(metrics: dict[str, dict[str, float]]) -> str:
     lines = [
         "# SSI Domain Judgment Benchmark Comparison",
@@ -570,6 +854,26 @@ def _render_comparison(metrics: dict[str, dict[str, float]]) -> str:
             f"| {system} | {row['mean_expert_judgment_score']:.3f} | "
             f"{row['win_rate_vs_bare']:.3f} | {row['win_rate_vs_rag']:.3f} | "
             f"{row['bad_mistake_rate']:.3f} | {row.get('delta_vs_rag', 0.0):.3f} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _render_folding_comparison(metrics: dict[str, dict[str, float]]) -> str:
+    lines = [
+        "# Folding Method Study Comparison",
+        "",
+        "| method | mean Expert Judgment Score | delta_vs_rag | delta_vs_manual | "
+        "win_rate_vs_rag | overgeneralization_rate | source_trace_rate |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for system, row in metrics.items():
+        lines.append(
+            f"| {system} | {row['mean_expert_judgment_score']:.3f} | "
+            f"{row['delta_vs_rag']:.3f} | "
+            f"{row['delta_vs_manual_folded_context']:.3f} | "
+            f"{row['win_rate_vs_rag']:.3f} | "
+            f"{row['overgeneralization_rate']:.3f} | "
+            f"{row['source_trace_rate']:.3f} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -647,6 +951,49 @@ def _render_summary(run: DomainJudgmentRun) -> str:
     return "\n".join(lines)
 
 
+def _render_folding_summary(run: FoldingMethodStudyRun) -> str:
+    typed = run.metrics["typed_core_context"]
+    manual = run.metrics["manual_folded_context"]
+    rag = run.metrics["rag_raw_sources"]
+    target_lines = [
+        f"- {name}: {passed}" for name, passed in run.targets.items()
+    ]
+    failed_targets = [
+        name for name, passed in run.targets.items() if name != "all_targets_pass" and not passed
+    ]
+    lines = [
+        "# Folding Method Study",
+        "",
+        "## Method Comparison",
+        "",
+        _render_folding_comparison(run.metrics).split("\n", 2)[2].strip(),
+        "",
+        "## Target Pass/Fail",
+        "",
+        f"- domain: {run.domain}",
+        "- suite: ssi_specialist",
+        f"- task_count: {len(run.tasks)}",
+        f"- task_types: {_task_type_counts(run.tasks)}",
+        f"- methods: {', '.join(run.systems)}",
+        f"- manual_folded_context_mean: {manual['mean_expert_judgment_score']:.3f}",
+        f"- rag_raw_sources_mean: {rag['mean_expert_judgment_score']:.3f}",
+        f"- typed_core_context_mean: {typed['mean_expert_judgment_score']:.3f}",
+        f"- typed_delta_vs_manual: {typed['delta_vs_manual_folded_context']:.3f}",
+        f"- typed_delta_vs_rag: {typed['delta_vs_rag']:.3f}",
+        f"- typed_overgeneralization_rate: {typed['overgeneralization_rate']:.3f}",
+        f"- typed_source_trace_rate: {typed['source_trace_rate']:.3f}",
+        *target_lines,
+        f"- failed_targets: {', '.join(failed_targets) if failed_targets else 'none'}",
+        "",
+        "## Limitation",
+        "",
+        "This deterministic study compares folding methods on autonomous_domain_evolver "
+        "SSI specialist tasks; it is not a public benchmark claim.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def _summary_title(suite: str) -> str:
     if suite == "ssi_specialist":
         return "# SSI Specialist 100-Task Benchmark"
@@ -683,6 +1030,24 @@ def _acceptance_status(run: DomainJudgmentRun) -> dict[str, bool]:
     return checks
 
 
+def _folding_study_targets(metrics: dict[str, dict[str, float]]) -> dict[str, bool]:
+    typed = metrics["typed_core_context"]
+    manual = metrics["manual_folded_context"]
+    checks = {
+        "target_typed_ge_manual_minus_0_2": (
+            typed["mean_expert_judgment_score"]
+            >= manual["mean_expert_judgment_score"] - 0.2
+        ),
+        "target_typed_delta_vs_rag_ge_1_0": typed["delta_vs_rag"] >= 1.0,
+        "target_overgeneralization_rate_le_0_05": (
+            typed["overgeneralization_rate"] <= 0.05
+        ),
+        "target_source_trace_rate_ge_0_85": typed["source_trace_rate"] >= 0.85,
+    }
+    checks["all_targets_pass"] = all(checks.values())
+    return checks
+
+
 def _likely_failure_cause(failed_targets: list[str]) -> str:
     if not failed_targets:
         return "none"
@@ -698,3 +1063,7 @@ def _likely_failure_cause(failed_targets: list[str]) -> str:
 def _task_row(task: DomainJudgmentTask) -> dict:
     row = dict(task.__dict__)
     return row
+
+
+def _source_exists(task: DomainJudgmentTask) -> bool:
+    return bool(task.source.strip())

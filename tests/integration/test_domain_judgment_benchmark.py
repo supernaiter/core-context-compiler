@@ -103,3 +103,49 @@ def test_ssi_specialist_suite_outputs_100_tasks_and_corectx(tmp_path: Path) -> N
     summary = (out / "summary.md").read_text(encoding="utf-8")
     assert "corectx_compiled_mean" in summary
     assert "all_targets_pass: True" in summary
+
+
+def test_folding_method_study_compares_context_methods(tmp_path: Path) -> None:
+    out = tmp_path / "folding_method_study"
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_folding_method_study.py",
+            "--domain",
+            "autonomous_domain_evolver",
+            "--domain-root",
+            str(missing_domain_root),
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    assert set(metrics) == {
+        "rag_raw_sources",
+        "manual_folded_context",
+        "rule_based_folded_context",
+        "case_to_rule_context",
+        "typed_core_context",
+    }
+    typed = metrics["typed_core_context"]
+    manual = metrics["manual_folded_context"]
+    assert typed["task_count"] == 100
+    assert typed["mean_expert_judgment_score"] >= (
+        manual["mean_expert_judgment_score"] - 0.2
+    )
+    assert typed["delta_vs_rag"] >= 1.0
+    assert typed["overgeneralization_rate"] <= 0.05
+    assert typed["source_trace_rate"] >= 0.85
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "## Method Comparison" in summary
+    assert "## Target Pass/Fail" in summary
+    assert "target_typed_ge_manual_minus_0_2: True" in summary
+    assert "target_typed_delta_vs_rag_ge_1_0: True" in summary
+    assert "target_overgeneralization_rate_le_0_05: True" in summary
+    assert "target_source_trace_rate_ge_0_85: True" in summary
+    assert "all_targets_pass: True" in summary
