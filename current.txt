@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-04T10:02:46+09:00
+updated: 2026-06-05T16:58:10+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -156,6 +156,13 @@ done:
   - absolute token inversion still fails on synthetic_v2
   - LongMemEval-S and MemoryAgentBench remain adapter-only
   - exact source spans unavailable for some public subsets
+- git_pilot_init:
+  - AGENTS.md added
+  - codex-ready issue template added
+  - GitHub labels added
+  - ready_issue_count: 0
+  - automation_skill: workspace-autopilot-github
+  - safety: direct main commit, no deploy unless issue permits
 - weak_result: absolute token inversion still false
 - commit: 8a23476
 - tag: v1.0.0
