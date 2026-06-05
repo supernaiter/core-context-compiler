@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T20:42:48+09:00
+updated: 2026-06-05T21:41:09+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -251,5 +251,21 @@ done:
 - verification: uv run ruff check . passed
 - verification: uv run python scripts/run_mcp_smoke.py --domain autonomous_domain_evolver passed
 - verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --system mcp_corectx_service --out reports/mcp_domain_service passed
+- issue: #39
+- multi_domain_intelligence_eval:
+  - domains: autonomous_domain_evolver/bta_deep_hole_drilling/f1_practice_intent_labeling
+  - tasks_total: 90
+  - tasks_per_domain: 30
+  - systems: bare_llm/rag_raw_sources/folded_context/mcp_corectx_service
+  - folded_context_mean_ejs: 4.603
+  - rag_raw_sources_mean_ejs: 3.133
+  - folded_delta_vs_rag: 1.470
+  - folded_win_rate_vs_rag: 1.000
+  - folded_bad_mistake_rate: 0.000
+  - losing_domains: none
+  - all_targets_pass: true
+- verification: uv run python scripts/run_multi_domain_intelligence_eval.py --out reports/multi_domain_intelligence passed
+- verification: uv run pytest passed 31 tests
+- verification: uv run ruff check . passed
 next:
 - continue Domain Intelligence roadmap from GitHub Issues

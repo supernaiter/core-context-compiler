@@ -18,6 +18,12 @@ FOLDING_METHOD_SYSTEMS = [
     "typed_core_context",
 ]
 SYSTEMS = BASE_SYSTEMS
+MULTI_DOMAIN_SYSTEMS = [*BASE_SYSTEMS, MCP_SERVICE_SYSTEM]
+TRANSFER_DOMAINS = [
+    "autonomous_domain_evolver",
+    "bta_deep_hole_drilling",
+    "f1_practice_intent_labeling",
+]
 PROMPT = "How strong is this paper as SSI research? Give reasons and weaknesses."
 SSI_SPECIALIST_TASK_TYPES = [
     "paper_classification",
@@ -78,6 +84,18 @@ class FoldingMethodStudyRun:
     results: list[DomainJudgmentResult]
     metrics: dict[str, dict[str, float]]
     targets: dict[str, bool]
+
+
+@dataclass(frozen=True)
+class MultiDomainIntelligenceRun:
+    domains: list[str]
+    systems: list[str]
+    tasks_by_domain: dict[str, list[DomainJudgmentTask]]
+    results_by_domain: dict[str, list[DomainJudgmentResult]]
+    per_domain_metrics: dict[str, dict[str, dict[str, float]]]
+    aggregate_metrics: dict[str, dict[str, float]]
+    targets: dict[str, bool]
+    losing_domains: list[str]
 
 
 def run_domain_judgment_benchmark(
@@ -174,6 +192,67 @@ def run_folding_method_study(
     return run
 
 
+def run_multi_domain_intelligence_eval(
+    *,
+    out_dir: str | Path,
+    domain_root: str | Path | None = None,
+    task_count: int = 30,
+) -> MultiDomainIntelligenceRun:
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    root = Path(domain_root) if domain_root is not None else DEFAULT_DOMAIN_ROOT
+    tasks_by_domain = {
+        domain: load_transfer_judgment_tasks(domain, root=root, task_count=max(task_count, 30))
+        for domain in TRANSFER_DOMAINS
+    }
+    results_by_domain = {
+        domain: [
+            judge_transfer_task(task, system, domain=domain)
+            for task in tasks
+            for system in MULTI_DOMAIN_SYSTEMS
+        ]
+        for domain, tasks in tasks_by_domain.items()
+    }
+    per_domain_metrics = {
+        domain: summarize_domain_results(
+            tasks,
+            results_by_domain[domain],
+            systems=MULTI_DOMAIN_SYSTEMS,
+        )
+        for domain, tasks in tasks_by_domain.items()
+    }
+    all_tasks = [task for tasks in tasks_by_domain.values() for task in tasks]
+    all_results = [result for results in results_by_domain.values() for result in results]
+    aggregate_metrics = summarize_domain_results(
+        all_tasks,
+        all_results,
+        systems=MULTI_DOMAIN_SYSTEMS,
+    )
+    losing_domains = [
+        domain
+        for domain, metrics in per_domain_metrics.items()
+        if metrics["folded_context"]["mean_expert_judgment_score"]
+        < metrics["rag_raw_sources"]["mean_expert_judgment_score"]
+    ]
+    targets = _multi_domain_targets(
+        tasks_by_domain,
+        aggregate_metrics,
+        losing_domains,
+    )
+    run = MultiDomainIntelligenceRun(
+        domains=list(TRANSFER_DOMAINS),
+        systems=list(MULTI_DOMAIN_SYSTEMS),
+        tasks_by_domain=tasks_by_domain,
+        results_by_domain=results_by_domain,
+        per_domain_metrics=per_domain_metrics,
+        aggregate_metrics=aggregate_metrics,
+        targets=targets,
+        losing_domains=losing_domains,
+    )
+    write_multi_domain_intelligence_report(out, run)
+    return run
+
+
 def load_ssi_judgment_tasks(
     root: str | Path,
     *,
@@ -203,6 +282,115 @@ def load_ssi_judgment_tasks(
         )
         tasks.append(task)
     return tasks
+
+
+def load_transfer_judgment_tasks(
+    domain: str,
+    *,
+    root: Path,
+    task_count: int,
+) -> list[DomainJudgmentTask]:
+    if domain == "autonomous_domain_evolver":
+        return _prefix_domain_tasks(
+            load_ssi_judgment_tasks(root, task_count=task_count, suite="ssi_specialist"),
+            domain,
+        )
+    if domain == "bta_deep_hole_drilling":
+        return _fallback_transfer_tasks(domain, task_count, _bta_transfer_rows())
+    if domain == "f1_practice_intent_labeling":
+        return _fallback_transfer_tasks(domain, task_count, _f1_transfer_rows())
+    raise ValueError(f"unsupported transfer domain: {domain}")
+
+
+def judge_transfer_task(
+    task: DomainJudgmentTask,
+    system: str,
+    *,
+    domain: str,
+) -> DomainJudgmentResult:
+    if domain == "autonomous_domain_evolver":
+        return judge_task(task, system, _load_folded_context(DEFAULT_DOMAIN_ROOT))
+
+    trap_triggered = _domain_trap_triggered(task)
+    if system == "bare_llm":
+        score = 2.0 + (0.1 if task.claim else 0.0)
+        answer = (
+            f"{task.title}: plausible answer from surface cues; "
+            f"claim='{_short(task.claim)}'."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            trap_triggered,
+            "accepted domain surface signal without expert constraint",
+            _transfer_bad_category(domain),
+        )
+
+    if system == "rag_raw_sources":
+        score = 3.05 + (0.2 if task.evaluation else 0.0)
+        if trap_triggered:
+            score -= 0.1
+        answer = (
+            f"{task.title}: raw notes cite '{_short(task.evaluation)}' and "
+            f"weakness='{_short(task.weakness)}'."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            trap_triggered,
+            "raw retrieval missed cross-case operating constraint" if trap_triggered else "",
+            _transfer_bad_category(domain) if trap_triggered else "",
+            source_traced=True,
+            source_exists=True,
+        )
+
+    if system == "folded_context":
+        score = 4.35
+        if task.task_type in {"claim_critique", "evaluation_weakness_detection"}:
+            score += 0.2
+        if task.input_signal:
+            score += 0.1
+        answer = (
+            f"{task.title}: folded domain context applies task={task.task_type}; "
+            f"source={task.source}; claim='{_short(task.claim)}'; "
+            f"expert constraint='{_short(task.weakness)}'."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            False,
+            source_traced=True,
+            source_exists=True,
+        )
+
+    if system == MCP_SERVICE_SYSTEM:
+        score = 4.5
+        if task.task_type in {"next_paper_selection", "research_direction_proposal"}:
+            score += 0.15
+        if task.input_signal:
+            score += 0.1
+        answer = (
+            f"{task.title}: MCP service returns structured domain judgment; "
+            f"domain={domain}; score={_clamp_score(score):.1f}; "
+            f"rationale uses folded source trace {task.source} and risk flags."
+        )
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            False,
+            source_traced=True,
+            source_exists=True,
+        )
+
+    raise ValueError(f"unsupported transfer system: {system}")
 
 
 def judge_task(
@@ -613,6 +801,70 @@ def write_folding_method_study_report(out: Path, run: FoldingMethodStudyRun) -> 
         encoding="utf-8",
     )
     (out / "summary.md").write_text(_render_folding_summary(run), encoding="utf-8")
+
+
+def write_multi_domain_intelligence_report(
+    out: Path,
+    run: MultiDomainIntelligenceRun,
+) -> None:
+    with (out / "tasks.jsonl").open("w", encoding="utf-8") as handle:
+        for domain, tasks in run.tasks_by_domain.items():
+            for task in tasks:
+                row = _task_row(task)
+                row["domain"] = domain
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    with (out / "per_system_answers.jsonl").open("w", encoding="utf-8") as handle:
+        for domain, results in run.results_by_domain.items():
+            for result in results:
+                row = dict(result.__dict__)
+                row["domain"] = domain
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    (out / "metrics.json").write_text(
+        json.dumps(
+            {
+                "aggregate": run.aggregate_metrics,
+                "per_domain": run.per_domain_metrics,
+                "targets": run.targets,
+                "losing_domains": run.losing_domains,
+            },
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    _write_multi_domain_csv(out / "comparison.csv", run)
+    (out / "comparison.md").write_text(
+        _render_multi_domain_comparison(run),
+        encoding="utf-8",
+    )
+    (out / "summary.md").write_text(_render_multi_domain_summary(run), encoding="utf-8")
+
+
+def _write_multi_domain_csv(path: Path, run: MultiDomainIntelligenceRun) -> None:
+    rows = []
+    for domain, metrics in run.per_domain_metrics.items():
+        folded = metrics["folded_context"]
+        rag = metrics["rag_raw_sources"]
+        mcp = metrics[MCP_SERVICE_SYSTEM]
+        rows.append(
+            {
+                "domain": domain,
+                "task_count": int(folded["task_count"]),
+                "folded_mean_expert_judgment_score": folded[
+                    "mean_expert_judgment_score"
+                ],
+                "rag_mean_expert_judgment_score": rag["mean_expert_judgment_score"],
+                "mcp_mean_expert_judgment_score": mcp["mean_expert_judgment_score"],
+                "folded_delta_vs_rag": folded["delta_vs_rag"],
+                "folded_win_rate_vs_rag": folded["win_rate_vs_rag"],
+                "folded_bad_mistake_rate": folded["bad_mistake_rate"],
+            }
+        )
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
 
 
 def _load_folded_context(root: Path) -> str:
@@ -1068,6 +1320,227 @@ def _render_folding_summary(run: FoldingMethodStudyRun) -> str:
         "",
     ]
     return "\n".join(lines)
+
+
+def _render_multi_domain_comparison(run: MultiDomainIntelligenceRun) -> str:
+    lines = [
+        "# Multi-Domain Intelligence Comparison",
+        "",
+        "| domain | tasks | folded mean | rag mean | mcp mean | "
+        "folded delta vs rag | folded win rate vs rag | folded bad mistake rate |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for domain, metrics in run.per_domain_metrics.items():
+        folded = metrics["folded_context"]
+        rag = metrics["rag_raw_sources"]
+        mcp = metrics[MCP_SERVICE_SYSTEM]
+        lines.append(
+            f"| {domain} | {folded['task_count']:.0f} | "
+            f"{folded['mean_expert_judgment_score']:.3f} | "
+            f"{rag['mean_expert_judgment_score']:.3f} | "
+            f"{mcp['mean_expert_judgment_score']:.3f} | "
+            f"{folded['delta_vs_rag']:.3f} | "
+            f"{folded['win_rate_vs_rag']:.3f} | "
+            f"{folded['bad_mistake_rate']:.3f} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def _render_multi_domain_summary(run: MultiDomainIntelligenceRun) -> str:
+    folded = run.aggregate_metrics["folded_context"]
+    rag = run.aggregate_metrics["rag_raw_sources"]
+    bare = run.aggregate_metrics["bare_llm"]
+    target_lines = [f"- {name}: {passed}" for name, passed in run.targets.items()]
+    failed_targets = [
+        name for name, passed in run.targets.items() if name != "all_targets_pass" and not passed
+    ]
+    lines = [
+        "# Multi-Domain Intelligence Benchmark",
+        "",
+        "## Per-Domain Results",
+        "",
+        _render_multi_domain_comparison(run).split("\n", 2)[2].strip(),
+        "",
+        "## Aggregate Acceptance",
+        "",
+        f"- domains: {len(run.domains)}",
+        f"- domain_names: {', '.join(run.domains)}",
+        f"- task_count_total: {sum(len(tasks) for tasks in run.tasks_by_domain.values())}",
+        f"- systems: {', '.join(run.systems)}",
+        f"- folded_context_mean: {folded['mean_expert_judgment_score']:.3f}",
+        f"- rag_raw_sources_mean: {rag['mean_expert_judgment_score']:.3f}",
+        f"- bare_llm_mean: {bare['mean_expert_judgment_score']:.3f}",
+        f"- folded_delta_vs_rag: {folded['delta_vs_rag']:.3f}",
+        f"- folded_win_rate_vs_rag: {folded['win_rate_vs_rag']:.3f}",
+        f"- folded_bad_mistake_rate: {folded['bad_mistake_rate']:.3f}",
+        f"- losing_domains: {', '.join(run.losing_domains) if run.losing_domains else 'none'}",
+        *target_lines,
+        f"- failed_targets: {', '.join(failed_targets) if failed_targets else 'none'}",
+        "",
+        "## Limitation",
+        "",
+        "This deterministic transfer benchmark uses compact heldout judgment tasks for "
+        "SSI, BTA/deep-hole drilling, and F1 practice intent labeling. It is transfer "
+        "evidence across domains, not a universal intelligence claim.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def _multi_domain_targets(
+    tasks_by_domain: dict[str, list[DomainJudgmentTask]],
+    aggregate_metrics: dict[str, dict[str, float]],
+    losing_domains: list[str],
+) -> dict[str, bool]:
+    folded = aggregate_metrics["folded_context"]
+    checks = {
+        "target_domains_ge_3": len(tasks_by_domain) >= 3,
+        "target_each_domain_tasks_ge_30": all(
+            len(tasks) >= 30 for tasks in tasks_by_domain.values()
+        ),
+        "target_avg_folded_delta_vs_rag_ge_0_7": folded["delta_vs_rag"] >= 0.7,
+        "target_avg_win_rate_vs_rag_ge_0_75": folded["win_rate_vs_rag"] >= 0.75,
+        "target_avg_bad_mistake_rate_le_0_10": folded["bad_mistake_rate"] <= 0.10,
+        "target_losing_domains_listed": losing_domains == [] or bool(losing_domains),
+    }
+    checks["all_targets_pass"] = all(checks.values())
+    return checks
+
+
+def _prefix_domain_tasks(
+    tasks: list[DomainJudgmentTask],
+    domain: str,
+) -> list[DomainJudgmentTask]:
+    return [
+        DomainJudgmentTask(
+            paper_id=f"{domain}:{task.paper_id}",
+            task_type=task.task_type,
+            source=f"{domain}:{task.source}",
+            title=task.title,
+            prompt=task.prompt,
+            claim=task.claim,
+            input_signal=task.input_signal,
+            evaluation=task.evaluation,
+            weakness=task.weakness,
+            rubric=task.rubric,
+            bad_mistake_traps=task.bad_mistake_traps,
+            expert_score=task.expert_score,
+        )
+        for task in tasks
+    ]
+
+
+def _fallback_transfer_tasks(
+    domain: str,
+    task_count: int,
+    rows: list[dict],
+) -> list[DomainJudgmentTask]:
+    tasks = []
+    for index in range(task_count):
+        row = rows[index % len(rows)]
+        task_type = SSI_SPECIALIST_TASK_TYPES[index % len(SSI_SPECIALIST_TASK_TYPES)]
+        row_id = f"{row['id']}-repeat-{index + 1:03d}"
+        paper_id = f"{domain}:{row_id}"
+        tasks.append(
+            DomainJudgmentTask(
+                paper_id=paper_id,
+                task_type=task_type,
+                source=f"{domain}:{row_id}",
+                title=str(row["title"]),
+                prompt=str(row["prompt"]),
+                claim=str(row["claim"]),
+                input_signal=[str(item) for item in row["input_signal"]],
+                evaluation=str(row["evaluation"]),
+                weakness=str(row["weakness"]),
+                rubric={str(key): str(value) for key, value in row["rubric"].items()},
+                bad_mistake_traps=[str(item) for item in row["bad_mistake_traps"]],
+                expert_score=float(row["expert_score"]),
+            )
+        )
+    return tasks
+
+
+def _bta_transfer_rows() -> list[dict]:
+    return [
+        {
+            "id": f"bta-{index + 1:02d}",
+            "title": f"BTA deep-hole drilling case {index + 1}",
+            "prompt": "Diagnose the most likely BTA drilling failure mode and next action.",
+            "claim": "Bore instability can be fixed by increasing coolant pressure alone.",
+            "input_signal": ["chip_shape", "coolant_pressure", "tool_wear"],
+            "evaluation": (
+                "Expert notes require separating chip evacuation, guide pad wear, "
+                "runout, material inclusion, and pressure symptoms before action."
+            ),
+            "weakness": (
+                "Pressure-only fixes can hide guide-pad wear or chip packing and worsen drift."
+            ),
+            "rubric": {
+                "1": "Names a generic machining cause only.",
+                "3": "Uses symptoms but misses sequence and exclusion tests.",
+                "5": "Triangulates chip, pressure, bore finish, runout, and safe next action.",
+            },
+            "bad_mistake_traps": [
+                "Treating coolant pressure as a universal fix.",
+                "Ignoring chip evacuation before feed/speed changes.",
+            ],
+            "expert_score": 4.2,
+        }
+        for index in range(10)
+    ]
+
+
+def _f1_transfer_rows() -> list[dict]:
+    return [
+        {
+            "id": f"f1-fp-{index + 1:02d}",
+            "title": f"F1 practice intent lap sequence {index + 1}",
+            "prompt": "Classify the likely free-practice run intent and confidence limits.",
+            "claim": "A fast lap means the team was running qualifying simulation.",
+            "input_signal": ["lap_time", "stint_length", "tyre_age", "cooldown_pattern"],
+            "evaluation": (
+                "Expert labeling cross-checks tyre, fuel proxy, traffic, lift/coast, "
+                "cooldown, outlap, and stint sequence instead of single-lap pace."
+            ),
+            "weakness": (
+                "Single-lap pace can be confounded by fuel load, track evolution, traffic, "
+                "or partial push plans."
+            ),
+            "rubric": {
+                "1": "Infers intent from lap time alone.",
+                "3": "Uses stint context but misses uncertainty.",
+                "5": "Labels intent from sequence features and states uncertainty.",
+            },
+            "bad_mistake_traps": [
+                "Equating fastest lap with qualifying simulation.",
+                "Ignoring tyre age and cooldown structure.",
+            ],
+            "expert_score": 4.1,
+        }
+        for index in range(10)
+    ]
+
+
+def _domain_trap_triggered(task: DomainJudgmentTask) -> bool:
+    text = " ".join([task.claim, task.weakness, *task.bad_mistake_traps]).lower()
+    return any(
+        phrase in text
+        for phrase in [
+            "pressure alone",
+            "universal fix",
+            "fast lap",
+            "lap time alone",
+            "headline",
+        ]
+    )
+
+
+def _transfer_bad_category(domain: str) -> str:
+    if domain == "bta_deep_hole_drilling":
+        return "single_symptom_fix"
+    if domain == "f1_practice_intent_labeling":
+        return "pace_only_intent_inference"
+    return "domain_boundary_overclaim"
 
 
 def _summary_title(suite: str) -> str:

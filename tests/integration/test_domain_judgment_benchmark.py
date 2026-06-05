@@ -203,3 +203,44 @@ def test_mcp_domain_service_smoke_and_benchmark(tmp_path: Path) -> None:
     assert "mcp_loses_to_folded_context:" in summary
     assert "mcp_loses_to_rag:" in summary
     assert "all_targets_pass: True" in summary
+
+
+def test_multi_domain_intelligence_eval_outputs_transfer_report(tmp_path: Path) -> None:
+    out = tmp_path / "multi_domain_intelligence"
+    missing_domain_root = tmp_path / "missing_autonomous_domain_evolver"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/run_multi_domain_intelligence_eval.py",
+            "--domain-root",
+            str(missing_domain_root),
+            "--out",
+            str(out),
+        ],
+        check=True,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+
+    metrics = json.loads((out / "metrics.json").read_text(encoding="utf-8"))
+    assert set(metrics["per_domain"]) == {
+        "autonomous_domain_evolver",
+        "bta_deep_hole_drilling",
+        "f1_practice_intent_labeling",
+    }
+    assert metrics["targets"]["all_targets_pass"] is True
+    assert metrics["aggregate"]["folded_context"]["task_count"] == 90
+    assert metrics["aggregate"]["folded_context"]["delta_vs_rag"] >= 0.7
+    assert metrics["aggregate"]["folded_context"]["win_rate_vs_rag"] >= 0.75
+    assert metrics["aggregate"]["folded_context"]["bad_mistake_rate"] <= 0.10
+
+    tasks = [
+        json.loads(line)
+        for line in (out / "tasks.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(tasks) == 90
+    assert all(task["domain"] for task in tasks)
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "## Per-Domain Results" in summary
+    assert "losing_domains:" in summary
+    assert "all_targets_pass: True" in summary
