@@ -301,13 +301,13 @@ done:
 - verification: uv run ruff check . passed
 - issue: #33
 - no_work_triage:
-  - last_checked: 2026-06-06T05:45:24+09:00
+  - last_checked: 2026-06-06T06:46:19+09:00
   - classification: human-review-ready
   - ready_issue_count: 0
   - open_issue_count: 1
   - existing_human_issue: #33
   - new_issue_created: false
-  - latest_commit: e0277d4
+  - latest_commit: 1b19fb7
   - release_gate_all_targets_pass: true
   - primary_system: mcp_corectx_service
   - primary_mean_ejs: 4.736666666666666
