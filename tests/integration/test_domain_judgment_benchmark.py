@@ -34,6 +34,15 @@ def test_domain_judgment_benchmark_outputs(tmp_path: Path) -> None:
         "mean_expert_judgment_score"
     ]
     assert metrics["folded_context"]["win_rate_vs_bare"] == 1.0
+    assert metrics["folded_context"]["mean_expert_judgment_score"] >= 4.0
+    assert metrics["folded_context"]["delta_vs_rag"] >= 0.7
+    assert metrics["folded_context"]["win_rate_vs_rag"] >= 0.7
+    assert metrics["folded_context"]["bad_mistake_rate"] <= 0.1
+    assert metrics["folded_context"]["win_count_vs_rag"] >= 14
+
+    summary = (out / "summary.md").read_text(encoding="utf-8")
+    assert "all_targets_pass: True" in summary
+    assert "Bad Mistake Taxonomy" in summary
 
     tasks = (out / "tasks.jsonl").read_text(encoding="utf-8").strip().splitlines()
     assert len(tasks) >= 20

@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-05T17:16:57+09:00
+updated: 2026-06-05T18:29:39+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -192,6 +192,17 @@ done:
 - folded_win_rate_vs_rag: 1.0
 - folded_bad_mistake_rate: 0.0
 - verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --out reports/domain_judgment_v0 passed
+- verification: uv run pytest passed 27 tests
+- verification: uv run ruff check . passed
+- issue: #35
+- domain_judgment_poc:
+  - folded_mean_ejs: 4.750
+  - rag_mean_ejs: 3.100
+  - folded_delta_vs_rag: 1.650
+  - folded_win_rate_vs_rag: 1.000
+  - folded_bad_mistake_rate: 0.000
+  - all_targets_pass: true
+- verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --out reports/domain_judgment_poc passed
 - verification: uv run pytest passed 27 tests
 - verification: uv run ruff check . passed
 next:

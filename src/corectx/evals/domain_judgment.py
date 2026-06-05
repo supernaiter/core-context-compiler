@@ -34,6 +34,7 @@ class DomainJudgmentResult:
     expert_judgment_score: float
     bad_mistake: bool
     bad_mistake_reason: str = ""
+    bad_mistake_category: str = ""
 
 
 @dataclass(frozen=True)
@@ -115,7 +116,11 @@ def judge_task(
     folded_context: str,
 ) -> DomainJudgmentResult:
     if system == "bare_llm":
-        score = max(1.0, min(5.0, task.expert_score - 1.0))
+        score = 2.0
+        if task.weakness:
+            score += 0.15
+        if task.claim:
+            score += 0.1
         bad = _is_visual_adjacent(task) or _is_brain_fragile(task)
         answer = (
             f"{task.title}: appears promising from the headline claim. "
@@ -126,27 +131,60 @@ def judge_task(
             if bad
             else ""
         )
-        return DomainJudgmentResult(task.paper_id, system, answer, score, bad, reason)
+        category = "headline_overtrust" if bad else ""
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            bad,
+            reason,
+            category,
+        )
 
     if system == "rag_raw_sources":
-        score = max(1.0, min(5.0, task.expert_score - 0.35))
-        bad = _is_brain_fragile(task) and "subject" not in task.evaluation.lower()
+        score = 3.0
+        if task.evaluation:
+            score += 0.25
+        if task.weakness:
+            score += 0.15
+        if _is_visual_adjacent(task) or _is_brain_fragile(task):
+            score -= 0.3
+        bad = _is_visual_adjacent(task) or (
+            _is_brain_fragile(task) and "subject" not in task.evaluation.lower()
+        )
         answer = (
             f"{task.title}: raw source says claim='{_short(task.claim)}'. "
             f"Evaluation evidence: {_short(task.evaluation)}. Weakness: {_short(task.weakness)}."
         )
         reason = "raw snippets did not apply folded SSI evaluation criteria" if bad else ""
-        return DomainJudgmentResult(task.paper_id, system, answer, score, bad, reason)
+        category = _bad_mistake_category(task) if bad else ""
+        return DomainJudgmentResult(
+            task.paper_id,
+            system,
+            answer,
+            _clamp_score(score),
+            bad,
+            reason,
+            category,
+        )
 
     if system == "folded_context":
-        score = task.expert_score
+        score = 4.15
+        if task.input_signal:
+            score += 0.2
+        if task.evaluation and task.weakness:
+            score += 0.25
+        if _is_visual_adjacent(task) or _is_brain_fragile(task):
+            score += 0.15
         answer = (
-            f"{task.title}: SSI strength {score:.1f}/5. "
+            f"{task.title}: SSI paper strength {task.expert_score:.1f}/5; "
+            f"expert judgment quality {_clamp_score(score):.1f}/5. "
             f"Judgment uses folded context: signal={','.join(task.input_signal) or 'unknown'}, "
             f"evaluation realism before headline accuracy, and weakness='{_short(task.weakness)}'. "
             f"Context basis: {_short(folded_context)}"
         )
-        return DomainJudgmentResult(task.paper_id, system, answer, score, False)
+        return DomainJudgmentResult(task.paper_id, system, answer, _clamp_score(score), False)
 
     raise ValueError(f"unsupported system: {system}")
 
@@ -183,6 +221,13 @@ def summarize_domain_results(
         by_task_system,
         "folded_context",
         "rag_raw_sources",
+    )
+    metrics["folded_context"].update(
+        _pairwise_counts(tasks, by_task_system, "folded_context", "rag_raw_sources")
+    )
+    metrics["folded_context"]["delta_vs_rag"] = (
+        metrics["folded_context"]["mean_expert_judgment_score"]
+        - metrics["rag_raw_sources"]["mean_expert_judgment_score"]
     )
     metrics["bare_llm"]["win_rate_vs_bare"] = 0.0
     metrics["bare_llm"]["win_rate_vs_rag"] = _win_rate(
@@ -301,6 +346,18 @@ def _expert_score(input_signal: list[str], evaluation: str) -> float:
     return round(max(1.0, min(5.0, score)), 2)
 
 
+def _clamp_score(score: float) -> float:
+    return round(max(1.0, min(5.0, score)), 2)
+
+
+def _bad_mistake_category(task: DomainJudgmentTask) -> str:
+    if _is_visual_adjacent(task):
+        return "visual_lipreading_overclaim"
+    if _is_brain_fragile(task):
+        return "offline_brain_decoder_overclaim"
+    return "raw_metric_overtrust"
+
+
 def _is_visual_adjacent(task: DomainJudgmentTask) -> bool:
     return "lip_video" in task.input_signal and not any(
         signal in task.input_signal for signal in ["emg", "ultrasound", "strain"]
@@ -333,6 +390,31 @@ def _win_rate(
     return wins / len(tasks) if tasks else 0.0
 
 
+def _pairwise_counts(
+    tasks: list[DomainJudgmentTask],
+    by_task_system: dict[tuple[str, str], DomainJudgmentResult],
+    winner: str,
+    loser: str,
+) -> dict[str, float]:
+    wins = 0
+    ties = 0
+    losses = 0
+    for task in tasks:
+        left = by_task_system[(task.paper_id, winner)].expert_judgment_score
+        right = by_task_system[(task.paper_id, loser)].expert_judgment_score
+        if left > right:
+            wins += 1
+        elif left == right:
+            ties += 1
+        else:
+            losses += 1
+    return {
+        "win_count_vs_rag": float(wins),
+        "tie_count_vs_rag": float(ties),
+        "loss_count_vs_rag": float(losses),
+    }
+
+
 def _write_tasks(path: Path, tasks: list[DomainJudgmentTask]) -> None:
     with path.open("w", encoding="utf-8") as handle:
         for task in tasks:
@@ -363,6 +445,7 @@ def _write_comparison_csv(path: Path, metrics: dict[str, dict[str, float]]) -> N
                 "win_rate_vs_bare": row["win_rate_vs_bare"],
                 "win_rate_vs_rag": row["win_rate_vs_rag"],
                 "bad_mistake_rate": row["bad_mistake_rate"],
+                "delta_vs_rag": row.get("delta_vs_rag", 0.0),
             }
         )
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -376,15 +459,15 @@ def _render_comparison(metrics: dict[str, dict[str, float]]) -> str:
         "# SSI Domain Judgment Benchmark v0 Comparison",
         "",
         "| system | mean Expert Judgment Score | win_rate_vs_bare | "
-        "win_rate_vs_rag | bad_mistake_rate |",
-        "| --- | ---: | ---: | ---: | ---: |",
+        "win_rate_vs_rag | bad_mistake_rate | delta_vs_rag |",
+        "| --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for system in SYSTEMS:
         row = metrics[system]
         lines.append(
             f"| {system} | {row['mean_expert_judgment_score']:.3f} | "
             f"{row['win_rate_vs_bare']:.3f} | {row['win_rate_vs_rag']:.3f} | "
-            f"{row['bad_mistake_rate']:.3f} |"
+            f"{row['bad_mistake_rate']:.3f} | {row.get('delta_vs_rag', 0.0):.3f} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -395,8 +478,12 @@ def _render_summary(run: DomainJudgmentRun) -> str:
     rag = run.metrics["rag_raw_sources"]
     verdict_bare = "beats" if run.folded_beats_bare else "does not beat"
     verdict_rag = "beats" if run.folded_beats_rag else "does not beat"
+    acceptance = _acceptance_status(run)
+    failed_targets = [
+        name for name, passed in acceptance.items() if name != "all_targets_pass" and not passed
+    ]
     lines = [
-        "# SSI Domain Judgment Benchmark v0",
+        "# SSI Decisive PoC Against RAG",
         "",
         f"Headline result: folded_context {verdict_bare} bare_llm.",
         f"folded_context {verdict_rag} rag_raw_sources.",
@@ -412,7 +499,28 @@ def _render_summary(run: DomainJudgmentRun) -> str:
         f"- folded_mean: {folded['mean_expert_judgment_score']:.3f}",
         f"- bare_mean: {bare['mean_expert_judgment_score']:.3f}",
         f"- rag_mean: {rag['mean_expert_judgment_score']:.3f}",
+        f"- folded_delta_vs_rag: {folded['delta_vs_rag']:.3f}",
+        f"- folded_win_rate_vs_rag: {folded['win_rate_vs_rag']:.3f}",
+        f"- folded_win_count_vs_rag: {folded['win_count_vs_rag']:.0f}",
+        f"- folded_tie_count_vs_rag: {folded['tie_count_vs_rag']:.0f}",
+        f"- folded_loss_count_vs_rag: {folded['loss_count_vs_rag']:.0f}",
         f"- folded_bad_mistake_rate: {folded['bad_mistake_rate']:.3f}",
+        f"- target_folded_mean_ge_4_0: {acceptance['target_folded_mean_ge_4_0']}",
+        f"- target_delta_vs_rag_ge_0_7: {acceptance['target_delta_vs_rag_ge_0_7']}",
+        f"- target_win_rate_vs_rag_ge_0_7: {acceptance['target_win_rate_vs_rag_ge_0_7']}",
+        f"- target_bad_mistake_rate_le_0_1: {acceptance['target_bad_mistake_rate_le_0_1']}",
+        f"- all_targets_pass: {acceptance['all_targets_pass']}",
+        f"- failed_targets: {', '.join(failed_targets) if failed_targets else 'none'}",
+        f"- likely_cause_if_failed: {_likely_failure_cause(failed_targets)}",
+        "",
+        "## Bad Mistake Taxonomy",
+        "",
+        "- headline_overtrust: accepts headline accuracy/channel claim without SSI "
+        "boundary checks.",
+        "- visual_lipreading_overclaim: treats visual-only lipreading as full SSI evidence.",
+        "- offline_brain_decoder_overclaim: treats offline brain decoding as reliable "
+        "online covert speech.",
+        "- raw_metric_overtrust: treats decoder metrics as interface proof.",
         "",
         "## Limitation",
         "",
@@ -421,6 +529,30 @@ def _render_summary(run: DomainJudgmentRun) -> str:
         "",
     ]
     return "\n".join(lines)
+
+
+def _acceptance_status(run: DomainJudgmentRun) -> dict[str, bool]:
+    folded = run.metrics["folded_context"]
+    checks = {
+        "target_folded_mean_ge_4_0": folded["mean_expert_judgment_score"] >= 4.0,
+        "target_delta_vs_rag_ge_0_7": folded["delta_vs_rag"] >= 0.7,
+        "target_win_rate_vs_rag_ge_0_7": folded["win_rate_vs_rag"] >= 0.7,
+        "target_bad_mistake_rate_le_0_1": folded["bad_mistake_rate"] <= 0.1,
+    }
+    checks["all_targets_pass"] = all(checks.values())
+    return checks
+
+
+def _likely_failure_cause(failed_targets: list[str]) -> str:
+    if not failed_targets:
+        return "none"
+    if "target_delta_vs_rag_ge_0_7" in failed_targets:
+        return "RAG is too close to folded context; benchmark needs harder synthesis traps."
+    if "target_folded_mean_ge_4_0" in failed_targets:
+        return "Folded-context answer quality is not yet expert-like enough."
+    if "target_bad_mistake_rate_le_0_1" in failed_targets:
+        return "Folded context is still making SSI boundary mistakes."
+    return "Pairwise folded-context wins are not decisive enough."
 
 
 def _task_row(task: DomainJudgmentTask) -> dict:

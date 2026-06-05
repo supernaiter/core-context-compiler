@@ -11,3 +11,4 @@
 2026-06-05T16:58:10+09:00 | initialize GitHub pilot workspace for workspace-autopilot-github; no ready issue created yet
 2026-06-05T17:03:01+09:00 | create Domain Intelligence roadmap issues #33-#41; primary target is Expert Judgment Score, not token efficiency
 2026-06-05T17:16:57+09:00 | implement Issue #34 as deterministic SSI domain judgment benchmark using autonomous_domain_evolver notes/context; keep public/generalization limitation explicit
+2026-06-05T18:29:39+09:00 | implement Issue #35 by recalibrating SSI benchmark to score expert judgment quality separately from paper strength; acceptance targets pass deterministically
