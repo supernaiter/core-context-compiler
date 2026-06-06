@@ -68,7 +68,19 @@ def main() -> None:
     audit_parser.add_argument("--replacement-text")
     audit_parser.add_argument("--author")
     audit_verify_parser = sub.add_parser("audit-verify")
-    audit_verify_parser.add_argument("--file", default="memory/context_audit.jsonl")
+    audit_verify_parser.add_argument("--file", "--path", default="memory/context_audit.jsonl")
+    review_parser = sub.add_parser("context-review")
+    review_sub = review_parser.add_subparsers(dest="review_command", required=True)
+    review_export = review_sub.add_parser("export")
+    review_export.add_argument("--proposals", required=True)
+    review_export.add_argument("--out", required=True)
+    review_decide = review_sub.add_parser("decide")
+    review_decide.add_argument("--proposals", required=True)
+    review_decide.add_argument("--audit", default="context_audit.jsonl")
+    review_decide.add_argument("--context-id", required=True)
+    review_decide.add_argument("--decision", choices=["accept", "reject", "rewrite"], required=True)
+    review_decide.add_argument("--reason", required=True)
+    review_decide.add_argument("--replacement-text")
     args = parser.parse_args()
 
     if args.command == "ingest":
@@ -124,6 +136,29 @@ def main() -> None:
     elif args.command == "audit-verify":
         validate_context_audit(args.file)
         print(json.dumps(summarize_context_audit(args.file), ensure_ascii=False, sort_keys=True))
+    elif args.command == "context-review":
+        from corectx.context_review import (
+            export_context_review_markdown,
+            load_context_proposals,
+            review_context_statement,
+        )
+
+        proposals = load_context_proposals(args.proposals)
+        if args.review_command == "export":
+            export_context_review_markdown(proposals, args.out)
+            print(json.dumps({"status": "ok", "out": args.out}, ensure_ascii=False))
+        elif args.review_command == "decide":
+            by_id = {proposal.context_id: proposal for proposal in proposals}
+            if args.context_id not in by_id:
+                raise SystemExit(f"unknown context_id: {args.context_id}")
+            entry = review_context_statement(
+                by_id[args.context_id],
+                decision=args.decision,
+                audit_path=args.audit,
+                reviewer_reason=args.reason,
+                replacement_text=args.replacement_text,
+            )
+            print(json.dumps({"status": "ok", "audit": entry.model_dump()}, ensure_ascii=False))
     else:
         print(json.dumps({"status": "not_implemented"}))
 
