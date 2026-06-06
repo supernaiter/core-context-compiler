@@ -17,6 +17,7 @@ def _atom(
     atom_type: str | None = None,
     superseded: bool = False,
     policy_fields: bool = True,
+    value: str | None = None,
 ) -> MemoryAtom:
     policy_values = (
         {
@@ -35,7 +36,7 @@ def _atom(
         atom_type=atom_type,
         subject="core_context",
         relation="judgment_view",
-        value=atom_id,
+        value=value or atom_id,
         scope="project",
         confidence=0.8,
         importance=0.8,
@@ -61,6 +62,12 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
             atom_type="typical_pattern",
             policy_fields=False,
         ),
+        _atom(
+            "fact_cache_shape",
+            core_context_candidate=True,
+            atom_type="typical_pattern",
+            value="Build a topic list from source trivia.",
+        ),
         _atom("accepted_view", core_context_candidate=True, atom_type="typical_pattern"),
         _atom("accepted_fact"),
     ]
@@ -74,6 +81,7 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     assert "quarantined" not in rendered
     assert "superseded" not in rendered
     assert "missing_policy" not in rendered
+    assert "topiclist" not in rendered
 
 
 def test_prompt_block_applies_runtime_core_gate() -> None:

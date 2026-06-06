@@ -166,6 +166,37 @@ def test_core_context_candidate_requires_centrality_effect() -> None:
     assert admit_atom(atom).admission_status == "rejected"
 
 
+def test_core_context_candidate_rejects_fact_cache_shape() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Core context is not a fact cache.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-fact-cache",
+        kind="belief",
+        atom_type="typical_pattern",
+        subject="core_context",
+        relation="domain_view",
+        value="Keep a frequency table of author claims.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        core_context_candidate=True,
+        centrality_effect="Treats source trivia as central.",
+        decision_impact="Does not change downstream judgment.",
+        baseline_delta="Only repeats what raw retrieval already supplies.",
+        conflict_check="Checked against Policy v2 fact-cache prohibition.",
+        update_semantics="No worldview update semantics.",
+    )
+
+    assert "fact_cache_shape" in policy_v2_admission_gaps(atom)
+    assert admit_atom(atom).admission_status == "rejected"
+
+
 def test_jsonl_backend_persists_atoms(tmp_path: Path) -> None:
     backend = JsonlBackend(tmp_path)
     atom = MemoryAtom(
