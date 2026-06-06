@@ -14,3 +14,4 @@
 2026-06-07T02:37:34+09:00 | Do not claim ruff verification when ruff enters STAT UE; record PID and use py_compile plus pytest as fallback evidence.
 2026-06-07T03:47:59+09:00 | If targeted pytest hangs after a prior pass, add a direct PYTHONPATH smoke assertion for the changed behavior and record the pytest rerun as incomplete.
 2026-06-07T04:49:04+09:00 | If uv run ruff hangs during package build, record it separately from direct ruff UE and keep pytest plus py_compile evidence explicit.
+2026-06-07T07:18:00+09:00 | Keep audit-only CLI imports lazy so context-audit workflows do not pay heavy evaluation imports.

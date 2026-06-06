@@ -10,10 +10,6 @@ from corectx.context_audit import (
     summarize_context_audit,
     validate_context_audit,
 )
-from corectx.evals.runner import EvalRunner
-from corectx.evals.token_efficiency import run_token_efficiency
-from corectx.ingest.benchmark_loader import load_benchmark
-from corectx.stores.memory_store_inmemory import InMemoryBackend
 
 
 def resolve_dataset(value: str) -> str:
@@ -78,15 +74,22 @@ def main() -> None:
     if args.command == "ingest":
         print(json.dumps({"input": args.input, "status": "accepted"}))
     elif args.command == "compile":
+        from corectx.evals.runner import EvalRunner
+        from corectx.ingest.benchmark_loader import load_benchmark
+
         dataset = load_benchmark(resolve_dataset(args.dataset))
         atoms = EvalRunner(budget_tokens=args.budget).compile_atoms(dataset)
         print(json.dumps({"atoms": len(atoms), "budget": args.budget}))
     elif args.command == "answer":
         print(json.dumps({"answer": "Run corectx eval for deterministic benchmark answers."}))
     elif args.command == "eval":
+        from corectx.evals.runner import EvalRunner
+
         metrics = EvalRunner().run(resolve_dataset(args.dataset), args.out)
         print(json.dumps(metrics, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "benchmark":
+        from corectx.evals.token_efficiency import run_token_efficiency
+
         result = run_token_efficiency("datasets/synthetic_v2", args.out)
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "report":
@@ -94,6 +97,8 @@ def main() -> None:
     elif args.command == "inspect":
         print(json.dumps({"atom_id": args.atom_id, "status": "inspect_requires_store"}))
     elif args.command == "rollback":
+        from corectx.stores.memory_store_inmemory import InMemoryBackend
+
         backend = InMemoryBackend()
         print(
             json.dumps(
