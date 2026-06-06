@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -41,7 +44,35 @@ def test_context_audit_roundtrip_records_reason_and_effect(tmp_path) -> None:
 
 def test_context_audit_requires_rule_text_and_reason() -> None:
     with pytest.raises(ValueError):
-        ContextAuditEntry(context_id="ssi.core.v1", action="add", text="", reason="")
+        ContextAuditEntry(
+            context_id="ssi.core.v1",
+            action="add",
+            text="",
+            reason="",
+            source_ids=["paper_001"],
+            baseline_error="treated local evidence as global",
+            expected_effect="avoid overgeneralization",
+            evaluation="bad mistake rate should drop",
+        )
+
+
+def test_context_audit_requires_policy_v2_audit_fields() -> None:
+    with pytest.raises(ValueError):
+        ContextAuditEntry(
+            context_id="ssi.core.v1",
+            action="keep",
+            text="Boundary evidence should remain boundary-scoped.",
+            reason="Prevents false centrality.",
+        )
+
+    with pytest.raises(ValueError):
+        ContextAuditEntry(
+            context_id="ssi.core.v1",
+            action="keep",
+            text="Boundary evidence should remain boundary-scoped.",
+            reason="Prevents false centrality.",
+            source_ids=["paper_001"],
+        )
 
 
 def test_context_audit_rejects_invalid_jsonl(tmp_path) -> None:
@@ -50,3 +81,67 @@ def test_context_audit_rejects_invalid_jsonl(tmp_path) -> None:
 
     with pytest.raises(ValueError):
         load_context_audit(audit_file)
+
+
+def test_cli_audit_requires_policy_v2_fields(tmp_path) -> None:
+    audit_file = tmp_path / "context_audit.jsonl"
+    repo_root = Path(__file__).resolve().parents[2]
+
+    missing_policy_fields = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "corectx.cli",
+            "audit",
+            "--file",
+            str(audit_file),
+            "--context-id",
+            "ssi.core.v1",
+            "--action",
+            "keep",
+            "--text",
+            "Boundary evidence should remain boundary-scoped.",
+            "--reason",
+            "Prevents false centrality.",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert missing_policy_fields.returncode != 0
+    assert "--source-id" in missing_policy_fields.stderr
+
+    complete = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "corectx.cli",
+            "audit",
+            "--file",
+            str(audit_file),
+            "--context-id",
+            "ssi.core.v1",
+            "--action",
+            "keep",
+            "--text",
+            "Boundary evidence should remain boundary-scoped.",
+            "--reason",
+            "Prevents false centrality.",
+            "--source-id",
+            "paper_001",
+            "--baseline-error",
+            "treated a local demo as central proof",
+            "--expected-effect",
+            "reduce overgeneralized paper strength judgments",
+            "--evaluation",
+            "boundary trap score improves",
+        ],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert json.loads(complete.stdout)["status"] == "ok"
+    assert validate_context_audit(audit_file)

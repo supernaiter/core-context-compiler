@@ -6,27 +6,36 @@ from collections import Counter
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ContextAuditAction = Literal["add", "update", "remove", "keep", "reject", "fold"]
 
 
 class ContextAuditEntry(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+
     time: dt.datetime = Field(default_factory=lambda: dt.datetime.now(dt.timezone.utc))
     context_id: str
     action: ContextAuditAction
     text: str
     reason: str
     source_ids: list[str] = Field(default_factory=list)
-    baseline_error: str | None = None
-    expected_effect: str | None = None
-    evaluation: str | None = None
+    baseline_error: str
+    expected_effect: str
+    evaluation: str
     previous_text: str | None = None
     replacement_text: str | None = None
     author: str | None = None
     commit_hash: str | None = None
 
-    @field_validator("context_id", "text", "reason")
+    @field_validator(
+        "context_id",
+        "text",
+        "reason",
+        "baseline_error",
+        "expected_effect",
+        "evaluation",
+    )
     @classmethod
     def require_nonempty(cls, value: str) -> str:
         if not value.strip():
@@ -36,7 +45,10 @@ class ContextAuditEntry(BaseModel):
     @field_validator("source_ids")
     @classmethod
     def clean_source_ids(cls, values: list[str]) -> list[str]:
-        return [value.strip() for value in values if value.strip()]
+        cleaned = [value.strip() for value in values if value.strip()]
+        if not cleaned:
+            raise ValueError("must include at least one source id")
+        return cleaned
 
 
 def append_context_audit(path: str | Path, entry: ContextAuditEntry) -> None:

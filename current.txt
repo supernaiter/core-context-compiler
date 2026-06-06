@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T20:31:23+09:00
+updated: 2026-06-06T21:30:36+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -442,5 +442,21 @@ done:
 - verification: uv run pytest tests/unit/test_rendering.py tests/unit/test_v1_long_plan_contracts.py incomplete; no test summary after 150 seconds and process was killed
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_rendering.py tests/unit/test_v1_long_plan_contracts.py -q incomplete; no test summary after 30 seconds and process was killed
 - verification: uv run ruff check target incomplete; ruff PID 66996 remains STAT UE/uninterruptible
+- issue: #47
+- context_audit_policy_v2_contract:
+  - status: implementation_complete
+  - source_ids_required
+  - baseline_error_required
+  - expected_effect_required
+  - evaluation_required
+  - cli_audit_requires_policy_fields
+  - files:
+    - src/corectx/context_audit.py
+    - src/corectx/cli.py
+    - tests/unit/test_context_audit.py
+- verification: git diff --check target files passed
+- verification: py_compile target files passed
+- verification: uv run pytest tests/unit/test_context_audit.py incomplete; timeout after 120 seconds
+- verification: uv run ruff check target files incomplete; timeout after 30 seconds
 next:
 - hourly autopilot will run next eligible cycle
