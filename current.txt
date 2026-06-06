@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T08:21:00+09:00
+updated: 2026-06-07T08:30:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -767,6 +767,8 @@ done:
 - verification: PYTHONPATH=src python3 -m pytest tests/unit/test_north_star_scorecard.py -q passed
 - verification: PYTHONPATH=src python3 scripts/run_north_star_gate.py --out reports/north_star_gate passed
 - verification: python3 -m ruff check target #61 files passed
+- verification: python3 -m ruff check src tests scripts passed
+- verification: PYTHONPATH=src python3 -m pytest -q passed 76 tests
 next:
 - ready_issues_created:
 - next_ready_issue: none

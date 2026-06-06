@@ -3,7 +3,6 @@ from __future__ import annotations
 from corectx.schemas import MemoryAtom
 from corectx.security.poison_detection import looks_poisoned
 
-
 _POLICY_V2_TEXT_FIELDS = (
     "centrality_effect",
     "decision_impact",
