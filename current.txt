@@ -461,6 +461,7 @@ done:
 - issue: #48
 - centrality_effect_admission_gate:
   - status: implementation_complete
+  - commit: 71fa7bd
   - admission: src/corectx/security/admission.py
   - tests: tests/unit/test_v1_long_plan_contracts.py
   - required_for_core_candidate:
