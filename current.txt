@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T18:09:09+09:00
+updated: 2026-06-06T19:28:02+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -390,5 +390,36 @@ done:
   - required_policy: docs/memory_policy.md
   - issue_policy: GitHub Issues only
   - no_ready_behavior: create_one_policy_aligned_ready_issue_or_pause
+- issue: #45
+- policy_v2_view_atom_contract:
+  - schema: src/corectx/schemas/memory_atom.py
+  - admission: src/corectx/security/admission.py
+  - tests:
+    - tests/unit/test_schemas.py
+    - tests/unit/test_v1_long_plan_contracts.py
+  - atom_types:
+    - central_prototype
+    - axis
+    - typical_pattern
+    - exception
+    - boundary_case
+    - bias
+    - update_rule
+    - non_update_rule
+    - deprecated_view
+    - warning
+  - required_for_core_candidate:
+    - atom_type
+    - provenance
+    - confidence
+    - decision_impact
+    - baseline_delta
+    - conflict_check
+    - update_semantics
+- verification: git diff --check passed
+- verification: py_compile passed
+- verification: uv run pytest tests/unit/test_schemas.py tests/unit/test_v1_long_plan_contracts.py incomplete; no test summary after 60s and process was killed
+- verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_schemas.py tests/unit/test_v1_long_plan_contracts.py -q incomplete; no test summary after 30s and process was killed
+- verification: uv run ruff check target not run; existing ruff PIDs 18247/37759/59902/89560 remain STAT UE/uninterruptible
 next:
-- hourly autopilot will run next eligible cycle
+- GitHub issue #45 writeback after commit/push

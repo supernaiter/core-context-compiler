@@ -23,6 +23,18 @@ class MemoryAtom(BaseModel):
         "skill",
         "episode_summary",
     ]
+    atom_type: Literal[
+        "central_prototype",
+        "axis",
+        "typical_pattern",
+        "exception",
+        "boundary_case",
+        "bias",
+        "update_rule",
+        "non_update_rule",
+        "deprecated_view",
+        "warning",
+    ] | None = None
     subject: str
     relation: str
     value: str
@@ -39,6 +51,7 @@ class MemoryAtom(BaseModel):
     superseded_by: list[str] = Field(default_factory=list)
     source_ids: list[str]
     evidence_spans: list[SourceSpan] = Field(default_factory=list)
+    counterevidence: list[str] = Field(default_factory=list)
     trust_tier: Literal["high", "medium", "low", "untrusted"] = "medium"
     admission_status: Literal[
         "candidate",
@@ -51,6 +64,13 @@ class MemoryAtom(BaseModel):
     derived_from: list[str] = Field(default_factory=list)
     entails: list[str] = Field(default_factory=list)
     contradicted_by: list[str] = Field(default_factory=list)
+    core_context_candidate: bool = False
+    centrality_effect: str = ""
+    decision_impact: str = ""
+    baseline_delta: str = ""
+    conflict_check: str = ""
+    update_semantics: str = ""
+    staleness: Literal["stable", "time-sensitive", "stale-risk", "deprecated"] = "stable"
     token_cost_verbose: int | None = None
     token_cost_compact: int | None = None
     token_cost_dsl: int | None = None
