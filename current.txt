@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T19:29:53+09:00
+updated: 2026-06-06T20:31:23+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -423,5 +423,23 @@ done:
 - verification: uv run pytest tests/unit/test_schemas.py tests/unit/test_v1_long_plan_contracts.py incomplete; no test summary after 60s and process was killed
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_schemas.py tests/unit/test_v1_long_plan_contracts.py -q incomplete; no test summary after 30s and process was killed
 - verification: uv run ruff check target not run; existing ruff PIDs 18247/37759/59902/89560 remain STAT UE/uninterruptible
+- issue: #46
+- runtime_core_policy_gate:
+  - status: implementation_complete
+  - renderer: src/corectx/rendering/dsl_renderer.py
+  - selector: src/corectx/scoring/budgeted_selector.py
+  - tests:
+    - tests/unit/test_rendering.py
+  - output_boundary:
+    - accepted_only
+    - provenance_required
+    - evidence_required
+    - superseded_excluded
+    - policy_v2_gaps_excluded_for_core_candidates
+- verification: git diff --check passed
+- verification: py_compile passed
+- verification: uv run pytest tests/unit/test_rendering.py tests/unit/test_v1_long_plan_contracts.py incomplete; no test summary after 150 seconds and process was killed
+- verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_rendering.py tests/unit/test_v1_long_plan_contracts.py -q incomplete; no test summary after 30 seconds and process was killed
+- verification: uv run ruff check target incomplete; ruff PID 66996 remains STAT UE/uninterruptible
 next:
 - hourly autopilot will run next eligible cycle

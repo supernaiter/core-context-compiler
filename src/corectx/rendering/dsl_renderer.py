@@ -4,6 +4,7 @@ import re
 
 from corectx.rendering.macro_registry import MacroRegistry
 from corectx.schemas import MemoryAtom
+from corectx.scoring.budgeted_selector import is_core_eligible
 from corectx.scoring.token_cost import TokenCounter
 
 
@@ -91,9 +92,12 @@ class DslRenderer:
         return [self.render_atom(atom) for atom in atoms]
 
     def render_core_block(self, atoms: list[MemoryAtom], *, include_macros: bool = True) -> str:
-        used_macros = {"P0"} if any(atom.relation == "answer_format" for atom in atoms) else set()
+        eligible_atoms = [atom for atom in atoms if is_core_eligible(atom)]
+        used_macros = (
+            {"P0"} if any(atom.relation == "answer_format" for atom in eligible_atoms) else set()
+        )
         lines: list[str] = []
         if include_macros:
             lines.extend(self.macros.render_definitions(used_macros))
-        lines.extend(atom.render_dsl or self.render_dsl(atom) for atom in atoms)
+        lines.extend(atom.render_dsl or self.render_dsl(atom) for atom in eligible_atoms)
         return "\n".join(lines)

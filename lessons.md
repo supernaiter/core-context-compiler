@@ -8,3 +8,4 @@
 2026-06-06T15:32:53+09:00 | Context edit history needs two layers: Git for batch versioning and context_audit.jsonl for individual rule reasons.
 2026-06-06T16:44:00+09:00 | Core policy should make decision impact and baseline subtraction admission criteria, not after-the-fact compression preferences.
 2026-06-06T19:28:02+09:00 | If Python import or pytest hangs before a summary, record the hang as incomplete verification and use py_compile plus diff checks as fallback evidence.
+2026-06-06T20:31:23+09:00 | Enforce Policy v2 at both admission and runtime output boundaries so direct renderer calls cannot bypass core eligibility.

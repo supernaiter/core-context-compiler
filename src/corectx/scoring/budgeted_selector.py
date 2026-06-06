@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from corectx.schemas import MemoryAtom
+from corectx.security.admission import policy_v2_admission_gaps
 
 
 @dataclass(frozen=True)
@@ -25,12 +26,15 @@ def _cost(atom: MemoryAtom, render_mode: str) -> int:
 
 
 def is_core_eligible(atom: MemoryAtom) -> bool:
-    return (
-        atom.admission_status == "accepted"
-        and bool(atom.source_ids)
-        and bool(atom.evidence_spans)
-        and not atom.superseded_by
-    )
+    if atom.admission_status != "accepted":
+        return False
+    if not atom.source_ids or not atom.evidence_spans:
+        return False
+    if atom.superseded_by:
+        return False
+    if atom.core_context_candidate or atom.atom_type is not None:
+        return not policy_v2_admission_gaps(atom)
+    return True
 
 
 def select_budgeted(
