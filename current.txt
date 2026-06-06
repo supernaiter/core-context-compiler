@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T03:47:59+09:00
+updated: 2026-06-07T04:41:30+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -572,4 +572,13 @@ done:
 - verification: uv run pytest target files incomplete; no summary after 150 seconds
 - verification: uv run ruff check target files incomplete; ruff PID 54178 remains STAT UE/uninterruptible
 next:
-- hourly autopilot will run next eligible cycle
+- ready_issues_created:
+  - "#55 Build baseline-intuition subtraction harness"
+  - "#56 Build expert judgment benchmark v2 beyond QA"
+  - "#57 Add RAG/search contrast tasks that require worldview, not retrieval"
+  - "#58 Add human review workflow for compiled context edits"
+  - "#59 Build update-semantics benchmark for new evidence"
+  - "#60 Add multi-domain external heldout validation pack"
+  - "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
+- in_progress_issue: "#54 Render Policy v2 core context document sections"
+- hourly_autopilot: will_continue_from_ready_issues
