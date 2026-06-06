@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T08:13:00+09:00
+updated: 2026-06-07T08:21:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -740,8 +740,34 @@ done:
 - verification: PYTHONPATH=src python3 -m pytest tests/unit/test_multi_domain_heldout.py -q passed
 - verification: PYTHONPATH=src python3 scripts/run_multi_domain_heldout.py --out reports/multi_domain_heldout passed
 - verification: python3 -m ruff check target #60 files passed
+- issue: #61
+- north_star_scorecard_gate:
+  - status: implementation_complete
+  - module: src/corectx/evals/north_star_scorecard.py
+  - cli: scripts/run_north_star_gate.py
+  - tests:
+    - tests/unit/test_north_star_scorecard.py
+  - docs_summary: docs/benchmarks/north_star_gate_summary.md
+  - systems:
+    - bare_llm
+    - naive_rag
+    - search_like_context
+    - rolling_summary
+    - compiled_core_context
+  - compiled_core_context_NorthStarScore: 0.975
+  - naive_rag_NorthStarScore: 0.357
+  - search_like_context_NorthStarScore: 0.338
+  - pass_fail:
+    - compiled_beats_bare_llm: true
+    - compiled_beats_naive_rag: true
+    - compiled_beats_search_like: true
+    - compiled_total_ge_0_80: true
+    - no_silent_skips: true
+  - known_failures: No blocking north-star failures in deterministic gate
+- verification: PYTHONPATH=src python3 -m pytest tests/unit/test_north_star_scorecard.py -q passed
+- verification: PYTHONPATH=src python3 scripts/run_north_star_gate.py --out reports/north_star_gate passed
+- verification: python3 -m ruff check target #61 files passed
 next:
 - ready_issues_created:
-  - "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
-- next_ready_issue: "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
+- next_ready_issue: none
 - hourly_autopilot: will_continue_from_ready_issues
