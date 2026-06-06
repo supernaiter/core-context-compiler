@@ -19,6 +19,7 @@ def _atom(
     policy_fields: bool = True,
     counterevidence: list[str] | None = None,
     value: str | None = None,
+    staleness: str = "stable",
 ) -> MemoryAtom:
     policy_values = (
         {
@@ -48,6 +49,7 @@ def _atom(
         core_context_candidate=core_context_candidate,
         superseded_by=["newer"] if superseded else [],
         counterevidence=counterevidence or [],
+        staleness=staleness,  # type: ignore[arg-type]
         **policy_values,
     )
 
@@ -69,6 +71,18 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
             core_context_candidate=True,
             atom_type="typical_pattern",
             value="Build a topic list from source trivia.",
+        ),
+        _atom(
+            "stale_ordinary",
+            core_context_candidate=True,
+            atom_type="typical_pattern",
+            staleness="stale-risk",
+        ),
+        _atom(
+            "stale_warning",
+            core_context_candidate=True,
+            atom_type="warning",
+            staleness="stale-risk",
         ),
         _atom("bias_without_exception", core_context_candidate=True, atom_type="bias"),
         _atom(
@@ -92,6 +106,8 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     assert "superseded" not in rendered
     assert "missing_policy" not in rendered
     assert "topiclist" not in rendered
+    assert "stale_ordinary" not in rendered
+    assert "stale_warning" in rendered
     assert "bias_without_exception" not in rendered
 
 

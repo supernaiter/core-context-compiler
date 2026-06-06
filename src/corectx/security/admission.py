@@ -27,6 +27,13 @@ _FACT_CACHE_SHAPES = (
     "low-impact fact",
 )
 
+_STALE_EXCEPTION_ATOM_TYPES = (
+    "exception",
+    "boundary_case",
+    "deprecated_view",
+    "warning",
+)
+
 
 def is_fact_cache_shaped_core_candidate(atom: MemoryAtom) -> bool:
     if not atom.core_context_candidate and atom.atom_type is None:
@@ -60,6 +67,10 @@ def policy_v2_admission_gaps(atom: MemoryAtom) -> list[str]:
     for field_name in _POLICY_V2_TEXT_FIELDS:
         if not getattr(atom, field_name).strip():
             gaps.append(field_name)
+    if atom.staleness in {"stale-risk", "deprecated"} and (
+        atom.atom_type not in _STALE_EXCEPTION_ATOM_TYPES
+    ):
+        gaps.append("stale_exception_value")
     if atom.atom_type == "bias" and not atom.counterevidence:
         gaps.append("bias_exception")
     if is_fact_cache_shaped_core_candidate(atom):

@@ -197,6 +197,71 @@ def test_core_context_candidate_rejects_fact_cache_shape() -> None:
     assert admit_atom(atom).admission_status == "rejected"
 
 
+def test_stale_core_candidate_requires_exception_value() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Runtime core excludes stale details unless they prevent a known error.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-stale-ordinary",
+        kind="belief",
+        atom_type="typical_pattern",
+        subject="core_context",
+        relation="domain_view",
+        value="Treat last quarter's local metric as a central pattern.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.35,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        core_context_candidate=True,
+        centrality_effect="Moves a stale local metric toward the domain center.",
+        decision_impact="Would change downstream prioritization.",
+        baseline_delta="Adds a stale local rule beyond raw retrieval.",
+        conflict_check="Checked against Policy v2 stale-detail exclusion.",
+        update_semantics="Replace when current domain evidence is available.",
+        staleness="stale-risk",
+    )
+
+    assert "stale_exception_value" in policy_v2_admission_gaps(atom)
+    assert admit_atom(atom).admission_status == "rejected"
+
+
+def test_stale_core_warning_with_exception_value_is_accepted() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Deprecated views may remain when they prevent known errors.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-stale-warning",
+        kind="belief",
+        atom_type="warning",
+        subject="core_context",
+        relation="domain_view",
+        value="Old benchmark wins are a tempting but deprecated proxy for real judgment.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.35,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        counterevidence=["Exception: current transfer gains can make benchmark evidence relevant."],
+        core_context_candidate=True,
+        centrality_effect="Keeps deprecated benchmark-only evidence away from the center.",
+        decision_impact="Prevents repeating a known evaluation mistake.",
+        baseline_delta="Adds a project-specific deprecated-view warning.",
+        conflict_check="Checked against current transfer benchmark evidence.",
+        update_semantics="Demote when benchmark-only claims stop causing mistakes.",
+        staleness="stale-risk",
+    )
+
+    assert policy_v2_admission_gaps(atom) == []
+    assert admit_atom(atom).admission_status == "accepted"
+
+
 def test_core_bias_candidate_requires_paired_exception() -> None:
     span = SourceSpan(
         source_id="policy-v2",

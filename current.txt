@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T00:29:33+09:00
+updated: 2026-06-07T01:31:31+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -509,5 +509,25 @@ done:
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src .venv/bin/python -m pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py -q incomplete; timeout after 60 seconds
 - verification: uv run ruff check target files incomplete; timeout after 60 seconds and ruff PID 52313 remains STAT UE/uninterruptible
 - verification: .venv/bin/ruff check target files incomplete; ruff PID 54230 remains STAT UE/uninterruptible
+- issue: #51
+- stale_exception_value_admission_gate:
+  - status: implementation_complete
+  - admission: src/corectx/security/admission.py
+  - tests:
+    - tests/unit/test_v1_long_plan_contracts.py
+    - tests/unit/test_rendering.py
+  - rejects_stale_ordinary_core_atoms:
+    - stale-risk
+    - deprecated
+  - allows_stale_exception_value_atom_types:
+    - warning
+    - exception
+    - boundary_case
+    - deprecated_view
+- verification: git diff --check target files passed
+- verification: python3 -m py_compile target files passed
+- verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py -q passed
+- verification: uv run pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py incomplete; timeout after 180 seconds
+- verification: uv run ruff check target files incomplete; ruff PID 64393 remains STAT UE/uninterruptible
 next:
 - hourly autopilot will run next eligible cycle

@@ -10,3 +10,4 @@
 2026-06-06T19:28:02+09:00 | If Python import or pytest hangs before a summary, record the hang as incomplete verification and use py_compile plus diff checks as fallback evidence.
 2026-06-06T20:31:23+09:00 | Enforce Policy v2 at both admission and runtime output boundaries so direct renderer calls cannot bypass core eligibility.
 2026-06-06T22:25:08+09:00 | Treat centrality or placement effect as a required core-context admission field; decision impact alone does not prove worldview value.
+2026-06-07T01:31:31+09:00 | When uv pytest hangs, retry target tests with PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 using .venv/bin/python before marking pytest incomplete.
