@@ -34,6 +34,67 @@ _STALE_EXCEPTION_ATOM_TYPES = (
     "warning",
 )
 
+_ACTIVE_CONFLICT_MARKERS = (
+    "active conflict",
+    "active contradiction",
+    "active disagreement",
+    "unresolved conflict",
+    "unresolved contradiction",
+    "unresolved disagreement",
+    "open conflict",
+    "open contradiction",
+    "open disagreement",
+    "current conflict",
+    "current contradiction",
+    "current disagreement",
+    "conflicts with",
+    "contradicts",
+    "disagrees with",
+    "in conflict with",
+    "in contradiction with",
+    "in disagreement with",
+)
+
+_NEGATED_CONFLICT_MARKERS = (
+    "no active conflict",
+    "no active contradiction",
+    "no active disagreement",
+    "no unresolved conflict",
+    "no unresolved contradiction",
+    "no unresolved disagreement",
+    "no open conflict",
+    "no open contradiction",
+    "no open disagreement",
+    "no current conflict",
+    "no current contradiction",
+    "no current disagreement",
+    "not an active conflict",
+    "not in conflict",
+)
+
+_CONFLICT_RESOLUTION_TERMS = (
+    "resolve",
+    "update",
+    "revise",
+    "settle",
+    "supersede",
+    "reconcile",
+    "replace",
+    "downgrade",
+    "upgrade",
+)
+
+_NEGATED_RESOLUTION_MARKERS = (
+    "no resolution",
+    "no update",
+    "no revision",
+    "no revise",
+    "not resolve",
+    "do not resolve",
+    "do not update",
+    "never update",
+)
+
 
 def is_fact_cache_shaped_core_candidate(atom: MemoryAtom) -> bool:
     if not atom.core_context_candidate and atom.atom_type is None:
@@ -51,6 +112,28 @@ def is_fact_cache_shaped_core_candidate(atom: MemoryAtom) -> bool:
         )
     ).lower()
     return any(shape in statement for shape in _FACT_CACHE_SHAPES)
+
+
+def _has_active_conflict_marker(conflict_check: str) -> bool:
+    normalized = " ".join(conflict_check.lower().split())
+    if not normalized:
+        return False
+    if any(marker in normalized for marker in _NEGATED_CONFLICT_MARKERS):
+        return False
+    return any(marker in normalized for marker in _ACTIVE_CONFLICT_MARKERS)
+
+
+def _has_conflict_resolution_semantics(update_semantics: str) -> bool:
+    normalized = " ".join(update_semantics.lower().split())
+    if not normalized:
+        return False
+    if any(marker in normalized for marker in _NEGATED_RESOLUTION_MARKERS):
+        return False
+    return any(term in normalized for term in _CONFLICT_RESOLUTION_TERMS)
+
+
+def _has_counterevidence(atom: MemoryAtom) -> bool:
+    return any(item.strip() for item in atom.counterevidence)
 
 
 def policy_v2_admission_gaps(atom: MemoryAtom) -> list[str]:
@@ -71,6 +154,11 @@ def policy_v2_admission_gaps(atom: MemoryAtom) -> list[str]:
         atom.atom_type not in _STALE_EXCEPTION_ATOM_TYPES
     ):
         gaps.append("stale_exception_value")
+    if atom.core_context_candidate and _has_active_conflict_marker(atom.conflict_check):
+        if not _has_counterevidence(atom):
+            gaps.append("conflict_counterevidence")
+        if not _has_conflict_resolution_semantics(atom.update_semantics):
+            gaps.append("conflict_resolution_semantics")
     if atom.atom_type == "bias" and not atom.counterevidence:
         gaps.append("bias_exception")
     if is_fact_cache_shaped_core_candidate(atom):

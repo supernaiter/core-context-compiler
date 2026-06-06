@@ -18,6 +18,8 @@ def _atom(
     superseded: bool = False,
     policy_fields: bool = True,
     counterevidence: list[str] | None = None,
+    conflict_check: str | None = None,
+    update_semantics: str | None = None,
     value: str | None = None,
     staleness: str = "stable",
 ) -> MemoryAtom:
@@ -26,8 +28,9 @@ def _atom(
             "centrality_effect": "Changes what the runtime core treats as central.",
             "decision_impact": "Changes downstream classification.",
             "baseline_delta": "Adds a non-obvious exception beyond raw retrieval.",
-            "conflict_check": "No active conflicting view.",
-            "update_semantics": "Replace when stronger counterevidence appears.",
+            "conflict_check": conflict_check or "No active conflicting view.",
+            "update_semantics": update_semantics
+            or "Replace when stronger counterevidence appears.",
         }
         if policy_fields
         else {}
@@ -91,6 +94,13 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
             atom_type="bias",
             counterevidence=["Exception: transfer evidence can override the bias."],
         ),
+        _atom(
+            "active_conflict_incomplete",
+            core_context_candidate=True,
+            atom_type="typical_pattern",
+            conflict_check="Active conflict with accepted transfer-evidence guidance.",
+            update_semantics="Keep both views until manual review.",
+        ),
         _atom("accepted_view", core_context_candidate=True, atom_type="typical_pattern"),
         _atom("accepted_fact"),
     ]
@@ -109,6 +119,7 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     assert "stale_ordinary" not in rendered
     assert "stale_warning" in rendered
     assert "bias_without_exception" not in rendered
+    assert "active_conflict_incomplete" not in rendered
 
 
 def test_prompt_block_applies_runtime_core_gate() -> None:

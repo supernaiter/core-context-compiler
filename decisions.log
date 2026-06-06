@@ -43,3 +43,4 @@
 2026-06-06T23:26:52+09:00 | implement Issue #49 because Policy v2 fact-cache prohibitions must be machine-checkable at admission and runtime eligibility boundaries
 2026-06-07T00:29:33+09:00 | implement Issue #50 because Policy v2 bias atoms must carry paired exceptions/counterevidence to avoid ungrounded stereotypes
 2026-06-07T01:31:31+09:00 | create and implement Issue #51 because stale/deprecated core atoms must be explicit warnings/exceptions/deprecated views to enter runtime core
+2026-06-07T02:37:34+09:00 | create and implement Issue #52 because active core conflicts need preserved counterevidence plus resolution semantics, not vague conflict_check text

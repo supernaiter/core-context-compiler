@@ -142,6 +142,72 @@ def test_complete_core_context_candidate_accepted_and_retains_policy_v2_fields()
     assert accepted.update_semantics == "Downgrade when evidence stops changing decisions."
 
 
+def test_active_conflict_core_candidate_requires_counterevidence_and_resolution() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Active conflicts need counterevidence and resolution semantics.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-active-conflict-incomplete",
+        kind="belief",
+        atom_type="typical_pattern",
+        subject="core_context",
+        relation="domain_view",
+        value="Treat both benchmark-only and transfer evidence as central.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        core_context_candidate=True,
+        centrality_effect="Moves conflicting evidence into the domain center.",
+        decision_impact="Changes how benchmark evidence is trusted.",
+        baseline_delta="Adds a conflict rule beyond raw retrieval.",
+        conflict_check="Active conflict with accepted transfer-evidence guidance.",
+        update_semantics="Keep disputed views side by side until manual review.",
+    )
+
+    assert policy_v2_admission_gaps(atom) == [
+        "conflict_counterevidence",
+        "conflict_resolution_semantics",
+    ]
+    assert admit_atom(atom).admission_status == "rejected"
+
+
+def test_active_conflict_core_candidate_with_resolution_is_accepted() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Active conflicts can enter core only with counterevidence and resolution.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-active-conflict-resolved",
+        kind="belief",
+        atom_type="typical_pattern",
+        subject="core_context",
+        relation="domain_view",
+        value="Benchmark evidence is useful only after transfer evidence agrees.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        counterevidence=["Older benchmark-only wins sometimes predicted real transfer."],
+        core_context_candidate=True,
+        centrality_effect="Places conflicting benchmark evidence below transfer evidence.",
+        decision_impact="Prevents accepting benchmark-only improvements as core proof.",
+        baseline_delta="Adds a project-specific conflict resolution rule.",
+        conflict_check="Active disagreement with older benchmark-only guidance.",
+        update_semantics="Reconcile by downgrade when transfer evidence fails.",
+    )
+
+    assert policy_v2_admission_gaps(atom) == []
+    assert admit_atom(atom).admission_status == "accepted"
+
+
 def test_core_context_candidate_requires_centrality_effect() -> None:
     atom = MemoryAtom(
         id="policy-v2-no-centrality",
