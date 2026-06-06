@@ -5,6 +5,7 @@ from corectx.security.poison_detection import looks_poisoned
 
 
 _POLICY_V2_TEXT_FIELDS = (
+    "centrality_effect",
     "decision_impact",
     "baseline_delta",
     "conflict_check",

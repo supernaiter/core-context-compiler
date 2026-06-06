@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from corectx.schemas import MemoryAtom, MemoryLoadout, RawEvent, SourceSpan
-from corectx.security.admission import admit_atom
+from corectx.security.admission import admit_atom, policy_v2_admission_gaps
 from corectx.stores.backend_adapters import JsonlBackend
 
 
@@ -140,6 +140,30 @@ def test_complete_core_context_candidate_accepted_and_retains_policy_v2_fields()
     assert accepted.baseline_delta == "Rejects facts that raw retrieval already supplies."
     assert accepted.conflict_check == "Checked against fact-cache and frequency-only summaries."
     assert accepted.update_semantics == "Downgrade when evidence stops changing decisions."
+
+
+def test_core_context_candidate_requires_centrality_effect() -> None:
+    atom = MemoryAtom(
+        id="policy-v2-no-centrality",
+        kind="belief",
+        atom_type="axis",
+        subject="core_context",
+        relation="domain_view",
+        value="Boundary evidence should not become central without transfer evidence.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=["policy-v2"],
+        core_context_candidate=True,
+        decision_impact="Prevents treating local demos as central proof.",
+        baseline_delta="Adds a placement rule beyond raw retrieval.",
+        conflict_check="Checked against central prototype evidence.",
+        update_semantics="Upgrade only when transfer evidence changes the domain center.",
+    )
+
+    assert policy_v2_admission_gaps(atom) == ["centrality_effect"]
+    assert admit_atom(atom).admission_status == "rejected"
 
 
 def test_jsonl_backend_persists_atoms(tmp_path: Path) -> None:
