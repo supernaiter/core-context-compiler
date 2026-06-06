@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T12:55:26+09:00
+updated: 2026-06-06T15:32:53+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -322,6 +322,56 @@ done:
 - verification: uv run pytest passed 33 tests in 5.37s
 - verification: uv run ruff check . not run; existing ruff PIDs 18247/37759/59902 remained uninterruptible after TERM/KILL
 - verification: uv run python scripts/run_domain_intelligence_release_gate.py --out reports/domain_intelligence_release_gate passed
+- policy_added:
+  - docs/memory_policy.md Core Context Compiler Policy
+  - compile worldview/common-sense/coordinate-system, not fact lists
+  - prefer baseline-intuition subtraction and decision-changing rules
+- issue: #33
+- no_work_triage:
+  - last_checked: 2026-06-06T13:56:27+09:00
+  - classification: human-review-ready
+  - ready_issue_count: 0
+  - open_issue_count: 1
+  - existing_human_issue: #33
+  - new_issue_created: false
+  - latest_commit: 04e5ed8
+  - dirty_files_before_run:
+    - current.txt
+    - docs/memory_policy.md
+    - .cursorindexingignore
+    - .specstory/
+    - docs/v1RDD.md
+  - commit_created: false
+  - reason: no eligible ready issue and pre-existing unrelated dirty files
+- verification: git fetch origin main incomplete; fetch hung and was killed
+- verification: uv run pytest incomplete; no test summary after several minutes and process was killed
+- verification: uv run ruff check . not run; existing ruff PIDs 18247/37759/59902 remained uninterruptible
+- issue: #33
+- no_work_triage:
+  - last_checked: 2026-06-06T15:02:47+09:00
+  - classification: human-review-ready
+  - ready_issue_count: 0
+  - open_issue_count: 1
+  - existing_human_issue: #33
+  - new_issue_created: false
+  - latest_commit: 04e5ed8
+  - origin_main: 04e5ed8
+  - commit_created: false
+  - reason: no eligible ready issue and pre-existing dirty files remain
+- verification: git fetch origin main passed
+- verification: uv run pytest incomplete; timed out after 300 seconds with no test summary
+- verification: uv run ruff check . not run; existing ruff PIDs 18247/37759/59902 remain STAT UE/uninterruptible
+- issue: #42
+- context_audit_mechanism:
+  - module: src/corectx/context_audit.py
+  - cli: corectx audit / corectx audit-verify
+  - tests: tests/unit/test_context_audit.py
+  - docs: docs/memory_policy.md Edit History Policy
+- verification: uv run pytest tests/unit/test_context_audit.py passed 3 tests
+- verification: PYTHONPATH=src uv run python context audit smoke passed
+- verification: PYTHONPATH=src uv run python -m corectx.cli audit/audit-verify passed
+- verification: py_compile passed
+- verification: ruff not run; existing ruff PIDs remain uninterruptible and new ruff PID 89560 is uninterruptible
 next:
 - GitHub Issue #33 human review
 - wait for new ready GitHub issue

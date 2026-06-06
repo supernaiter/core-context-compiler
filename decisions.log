@@ -31,3 +31,6 @@
 2026-06-06T10:52:46+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and record pytest pass plus ruff incomplete because ruff hung again in uninterruptible state
 2026-06-06T12:11:16+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and record ruff verification incomplete because existing ruff PIDs remain uninterruptible
 2026-06-06T12:55:26+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and record pytest/release-gate pass plus ruff impossible because existing ruff PIDs remain uninterruptible after TERM/KILL
+2026-06-06T13:56:27+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and do not commit because pre-existing unrelated dirty files are present
+2026-06-06T15:02:47+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and do not create duplicate roadmap issue
+2026-06-06T15:32:53+09:00 | add context_audit.jsonl as the rule-level ledger; Git commit messages remain batch-level explanations only

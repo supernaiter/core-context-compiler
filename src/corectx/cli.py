@@ -4,6 +4,12 @@ import argparse
 import json
 from pathlib import Path
 
+from corectx.context_audit import (
+    ContextAuditEntry,
+    append_context_audit,
+    summarize_context_audit,
+    validate_context_audit,
+)
 from corectx.evals.runner import EvalRunner
 from corectx.evals.token_efficiency import run_token_efficiency
 from corectx.ingest.benchmark_loader import load_benchmark
@@ -48,6 +54,25 @@ def main() -> None:
     inspect_parser.add_argument("--atom-id", required=True)
     rollback_parser = sub.add_parser("rollback")
     rollback_parser.add_argument("--source-id", required=True)
+    audit_parser = sub.add_parser("audit")
+    audit_parser.add_argument("--file", default="memory/context_audit.jsonl")
+    audit_parser.add_argument("--context-id", required=True)
+    audit_parser.add_argument(
+        "--action",
+        choices=["add", "update", "remove", "keep", "reject", "fold"],
+        required=True,
+    )
+    audit_parser.add_argument("--text", required=True)
+    audit_parser.add_argument("--reason", required=True)
+    audit_parser.add_argument("--source-id", action="append", default=[])
+    audit_parser.add_argument("--baseline-error")
+    audit_parser.add_argument("--expected-effect")
+    audit_parser.add_argument("--evaluation")
+    audit_parser.add_argument("--previous-text")
+    audit_parser.add_argument("--replacement-text")
+    audit_parser.add_argument("--author")
+    audit_verify_parser = sub.add_parser("audit-verify")
+    audit_verify_parser.add_argument("--file", default="memory/context_audit.jsonl")
     args = parser.parse_args()
 
     if args.command == "ingest":
@@ -75,6 +100,25 @@ def main() -> None:
                 {"source_id": args.source_id, "rollback": backend.rollback_atom(args.source_id)}
             )
         )
+    elif args.command == "audit":
+        entry = ContextAuditEntry(
+            context_id=args.context_id,
+            action=args.action,
+            text=args.text,
+            reason=args.reason,
+            source_ids=args.source_id,
+            baseline_error=args.baseline_error,
+            expected_effect=args.expected_effect,
+            evaluation=args.evaluation,
+            previous_text=args.previous_text,
+            replacement_text=args.replacement_text,
+            author=args.author,
+        )
+        append_context_audit(args.file, entry)
+        print(json.dumps({"status": "ok", "audit_file": args.file}, ensure_ascii=False))
+    elif args.command == "audit-verify":
+        validate_context_audit(args.file)
+        print(json.dumps(summarize_context_audit(args.file), ensure_ascii=False, sort_keys=True))
     else:
         print(json.dumps({"status": "not_implemented"}))
 
