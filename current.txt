@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T15:32:53+09:00
+updated: 2026-06-06T16:44:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -372,6 +372,14 @@ done:
 - verification: PYTHONPATH=src uv run python -m corectx.cli audit/audit-verify passed
 - verification: py_compile passed
 - verification: ruff not run; existing ruff PIDs remain uninterruptible and new ruff PID 89560 is uninterruptible
+- issue: #43
+- policy_replaced:
+  - docs/memory_policy.md Memory / Core Context Compiler Policy v2
+  - core_context: worldview_document_not_fact_cache
+  - admission_requires: provenance/scope/confidence/decision_impact/baseline_subtraction/conflict_check/update_semantics
+  - runtime_prefers: counterintuitive/decision-changing/failure-warning/boundary/exception/update-rule
+  - runtime_excludes: obvious_background/low-impact/source-trivia/isolated_examples
+  - context_edit_history: retained
 next:
 - GitHub Issue #33 human review
 - wait for new ready GitHub issue

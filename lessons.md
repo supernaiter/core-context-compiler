@@ -6,3 +6,4 @@
 2026-06-06T13:56:27+09:00 | If pytest hangs without a test summary for several minutes, terminate it and record verification as incomplete.
 2026-06-06T15:02:47+09:00 | Run long verification with an explicit timeout and record timeout as incomplete, not failed.
 2026-06-06T15:32:53+09:00 | Context edit history needs two layers: Git for batch versioning and context_audit.jsonl for individual rule reasons.
+2026-06-06T16:44:00+09:00 | Core policy should make decision impact and baseline subtraction admission criteria, not after-the-fact compression preferences.
