@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T16:44:00+09:00
+updated: 2026-06-06T18:09:09+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -380,6 +380,15 @@ done:
   - runtime_prefers: counterintuitive/decision-changing/failure-warning/boundary/exception/update-rule
   - runtime_excludes: obvious_background/low-impact/source-trivia/isolated_examples
   - context_edit_history: retained
+- automation_reconfigured:
+  - issue: #44
+  - id: core-context-compiler-hourly-autopilot
+  - status: ACTIVE
+  - schedule: hourly
+  - model: gpt-5.5
+  - effort: high
+  - required_policy: docs/memory_policy.md
+  - issue_policy: GitHub Issues only
+  - no_ready_behavior: create_one_policy_aligned_ready_issue_or_pause
 next:
-- GitHub Issue #33 human review
-- wait for new ready GitHub issue
+- hourly autopilot will run next eligible cycle

@@ -35,3 +35,4 @@
 2026-06-06T15:02:47+09:00 | no eligible ready issue remains; keep #33 as human-review-ready/no-autopilot and do not create duplicate roadmap issue
 2026-06-06T15:32:53+09:00 | add context_audit.jsonl as the rule-level ledger; Git commit messages remain batch-level explanations only
 2026-06-06T16:44:00+09:00 | replace memory policy with v2 worldview-document policy; keep context_audit.jsonl as edit-history mechanism
+2026-06-06T18:09:09+09:00 | re-enable core-context-compiler hourly autopilot with docs/memory_policy.md as required-read policy and policy-aligned issue creation when no ready issue exists
