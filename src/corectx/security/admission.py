@@ -60,6 +60,8 @@ def policy_v2_admission_gaps(atom: MemoryAtom) -> list[str]:
     for field_name in _POLICY_V2_TEXT_FIELDS:
         if not getattr(atom, field_name).strip():
             gaps.append(field_name)
+    if atom.atom_type == "bias" and not atom.counterevidence:
+        gaps.append("bias_exception")
     if is_fact_cache_shaped_core_candidate(atom):
         gaps.append("fact_cache_shape")
     return gaps

@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T23:26:52+09:00
+updated: 2026-06-07T00:29:33+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -492,5 +492,22 @@ done:
 - verification: uv run pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py incomplete; timeout after 120 seconds
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src .venv/bin/python -m pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py -q incomplete; timeout after 30 seconds
 - verification: uv run ruff check target files incomplete; timeout after 30 seconds
+- issue: #50
+- bias_exception_admission_gate:
+  - status: implementation_complete
+  - admission: src/corectx/security/admission.py
+  - tests:
+    - tests/unit/test_v1_long_plan_contracts.py
+    - tests/unit/test_rendering.py
+  - requires_core_bias:
+    - counterevidence_or_exception
+- verification: git diff --check target files passed
+- verification: python3 -m py_compile target files passed
+- verification: PYTHONPATH=src python3 admission smoke passed
+- verification: PYTHONPATH=src python3 render smoke passed
+- verification: uv run pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py incomplete; timeout after 120 seconds
+- verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=src .venv/bin/python -m pytest tests/unit/test_v1_long_plan_contracts.py tests/unit/test_rendering.py -q incomplete; timeout after 60 seconds
+- verification: uv run ruff check target files incomplete; timeout after 60 seconds and ruff PID 52313 remains STAT UE/uninterruptible
+- verification: .venv/bin/ruff check target files incomplete; ruff PID 54230 remains STAT UE/uninterruptible
 next:
 - hourly autopilot will run next eligible cycle

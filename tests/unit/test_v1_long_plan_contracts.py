@@ -197,6 +197,71 @@ def test_core_context_candidate_rejects_fact_cache_shape() -> None:
     assert admit_atom(atom).admission_status == "rejected"
 
 
+def test_core_bias_candidate_requires_paired_exception() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Biases must be paired with exceptions.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-bias-without-exception",
+        kind="belief",
+        atom_type="bias",
+        subject="core_context",
+        relation="domain_view",
+        value="Treat benchmark-heavy claims with suspicion.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        core_context_candidate=True,
+        centrality_effect="Moves benchmark-only claims away from the domain center.",
+        decision_impact="Prevents overrating claims that only optimize benchmark optics.",
+        baseline_delta="Adds a database-specific suspicion beyond generic skepticism.",
+        conflict_check="Checked against accepted benchmark-success cases.",
+        update_semantics="Revise when benchmark gains transfer to real judgment tasks.",
+    )
+
+    assert "bias_exception" in policy_v2_admission_gaps(atom)
+    assert admit_atom(atom).admission_status == "rejected"
+
+
+def test_core_bias_candidate_with_exception_is_accepted() -> None:
+    span = SourceSpan(
+        source_id="policy-v2",
+        event_id="policy-v2-event",
+        quote="Biases must be paired with exceptions.",
+    )
+    atom = MemoryAtom(
+        id="policy-v2-bias-with-exception",
+        kind="belief",
+        atom_type="bias",
+        subject="core_context",
+        relation="domain_view",
+        value="Treat benchmark-heavy claims with suspicion.",
+        scope="project",
+        confidence=0.85,
+        importance=0.9,
+        stability=0.75,
+        source_ids=[span.source_id],
+        evidence_spans=[span],
+        counterevidence=[
+            "Exception: benchmark gains become central when transfer tasks also improve."
+        ],
+        core_context_candidate=True,
+        centrality_effect="Moves benchmark-only claims away from the domain center.",
+        decision_impact="Prevents overrating claims that only optimize benchmark optics.",
+        baseline_delta="Adds a database-specific suspicion beyond generic skepticism.",
+        conflict_check="Checked against accepted benchmark-success cases.",
+        update_semantics="Revise when benchmark gains transfer to real judgment tasks.",
+    )
+
+    assert policy_v2_admission_gaps(atom) == []
+    assert admit_atom(atom).admission_status == "accepted"
+
+
 def test_jsonl_backend_persists_atoms(tmp_path: Path) -> None:
     backend = JsonlBackend(tmp_path)
     atom = MemoryAtom(

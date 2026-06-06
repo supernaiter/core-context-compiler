@@ -17,6 +17,7 @@ def _atom(
     atom_type: str | None = None,
     superseded: bool = False,
     policy_fields: bool = True,
+    counterevidence: list[str] | None = None,
     value: str | None = None,
 ) -> MemoryAtom:
     policy_values = (
@@ -46,6 +47,7 @@ def _atom(
         admission_status=status,  # type: ignore[arg-type]
         core_context_candidate=core_context_candidate,
         superseded_by=["newer"] if superseded else [],
+        counterevidence=counterevidence or [],
         **policy_values,
     )
 
@@ -68,6 +70,13 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
             atom_type="typical_pattern",
             value="Build a topic list from source trivia.",
         ),
+        _atom("bias_without_exception", core_context_candidate=True, atom_type="bias"),
+        _atom(
+            "bias_with_exception",
+            core_context_candidate=True,
+            atom_type="bias",
+            counterevidence=["Exception: transfer evidence can override the bias."],
+        ),
         _atom("accepted_view", core_context_candidate=True, atom_type="typical_pattern"),
         _atom("accepted_fact"),
     ]
@@ -75,6 +84,7 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     rendered = DslRenderer().render_core_block(atoms, include_macros=False)
 
     assert "accepted_view" in rendered
+    assert "bias_with_exception" in rendered
     assert "accepted_fact" in rendered
     assert "candidate" not in rendered
     assert "rejected" not in rendered
@@ -82,6 +92,7 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     assert "superseded" not in rendered
     assert "missing_policy" not in rendered
     assert "topiclist" not in rendered
+    assert "bias_without_exception" not in rendered
 
 
 def test_prompt_block_applies_runtime_core_gate() -> None:
