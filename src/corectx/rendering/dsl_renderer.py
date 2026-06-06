@@ -25,6 +25,34 @@ def _safe_text(value: str) -> str:
     return " ".join(value.split()) or "none"
 
 
+_POLICY_V2_SECTIONS = (
+    ("central_prototype", "CENTRAL PROTOTYPE"),
+    ("axis", "DISTANCE AXES"),
+    ("typical_pattern", "TYPICAL CLUSTERS"),
+    ("boundary_case", "EDGE CASES"),
+    ("exception", "EXCEPTIONS"),
+    ("bias", "COMMON BIASES"),
+    ("update_rule", "UPDATE RULES"),
+    ("non_update_rule", "NON-UPDATE RULES"),
+    ("deprecated_view", "DEPRECATED VIEWS AND WARNINGS"),
+    ("warning", "DEPRECATED VIEWS AND WARNINGS"),
+)
+_SECTION_BY_ATOM_TYPE = dict(_POLICY_V2_SECTIONS)
+_SECTION_TITLES = tuple(dict.fromkeys(title for _, title in _POLICY_V2_SECTIONS))
+
+
+def _is_policy_v2_core_atom(atom: MemoryAtom) -> bool:
+    return atom.core_context_candidate or atom.atom_type is not None
+
+
+def _evidence_refs(atom: MemoryAtom) -> str:
+    refs = [
+        f"{_safe_value(span.source_id)}:{_safe_value(span.event_id)}"
+        for span in atom.evidence_spans
+    ]
+    return ",".join(refs) or "none"
+
+
 def _worldview_core_block(atom: MemoryAtom) -> str:
     counterevidence = "; ".join(_safe_text(item) for item in atom.counterevidence if item.strip())
     return "\n".join(
@@ -40,6 +68,39 @@ def _worldview_core_block(atom: MemoryAtom) -> str:
             f"  counterevidence: {counterevidence or 'none'}",
         )
     )
+
+
+def _policy_v2_atom_block(atom: MemoryAtom) -> list[str]:
+    counterevidence = "; ".join(_safe_text(item) for item in atom.counterevidence if item.strip())
+    return [
+        f"- id={_safe_value(atom.id)} atom_type={atom.atom_type}",
+        f"  statement: {_safe_text(atom.subject)} {_safe_text(atom.relation)} "
+        f"{_safe_text(atom.value)}",
+        f"  provenance: source_ids={_sources(atom)} evidence={_evidence_refs(atom)}",
+        f"  scope_confidence: scope={atom.scope} confidence={_conf(atom.confidence)}",
+        f"  centrality_effect: {_safe_text(atom.centrality_effect)}",
+        f"  decision_impact: {_safe_text(atom.decision_impact)}",
+        f"  baseline_delta: {_safe_text(atom.baseline_delta)}",
+        f"  counterevidence: {counterevidence or 'none'}",
+        f"  update_semantics: {_safe_text(atom.update_semantics)}",
+    ]
+
+
+def _policy_v2_core_document(atoms: list[MemoryAtom]) -> str:
+    sections = {title: [] for title in _SECTION_TITLES}
+    for atom in atoms:
+        title = _SECTION_BY_ATOM_TYPE.get(atom.atom_type or "")
+        if title is None:
+            continue
+        sections[title].append(atom)
+
+    lines = ["CORE CONTEXT"]
+    for title in _SECTION_TITLES:
+        lines.append("")
+        lines.append(title)
+        for atom in sections[title]:
+            lines.extend(_policy_v2_atom_block(atom))
+    return "\n".join(lines)
 
 
 class DslRenderer:
@@ -116,11 +177,15 @@ class DslRenderer:
 
     def render_core_block(self, atoms: list[MemoryAtom], *, include_macros: bool = True) -> str:
         eligible_atoms = [atom for atom in atoms if is_core_eligible(atom)]
+        policy_core_atoms = [atom for atom in eligible_atoms if _is_policy_v2_core_atom(atom)]
+        legacy_atoms = [atom for atom in eligible_atoms if not _is_policy_v2_core_atom(atom)]
         used_macros = (
             {"P0"} if any(atom.relation == "answer_format" for atom in eligible_atoms) else set()
         )
         lines: list[str] = []
         if include_macros:
             lines.extend(self.macros.render_definitions(used_macros))
-        lines.extend(atom.render_dsl or self.render_dsl(atom) for atom in eligible_atoms)
+        if policy_core_atoms:
+            lines.append(_policy_v2_core_document(policy_core_atoms))
+        lines.extend(atom.render_dsl or self.render_dsl(atom) for atom in legacy_atoms)
         return "\n".join(lines)

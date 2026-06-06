@@ -132,15 +132,65 @@ def test_runtime_core_candidate_renders_worldview_shaped_block() -> None:
 
     rendered = DslRenderer().render_core_block([atom], include_macros=False)
 
-    assert "worldview_core id=accepted_view atom_type=typical_pattern" in rendered
+    assert rendered.startswith("CORE CONTEXT\n")
+    assert "TYPICAL CLUSTERS\n- id=accepted_view atom_type=typical_pattern" in rendered
     assert "source_ids=accepted_view-source" in rendered
+    assert "evidence=accepted_view-source:accepted_view-event" in rendered
+    assert "scope_confidence: scope=project confidence=.80" in rendered
     assert "statement: core_context judgment_view accepted_view" in rendered
     assert "centrality_effect: Changes what the runtime core treats as central." in rendered
     assert "decision_impact: Changes downstream classification." in rendered
     assert "baseline_delta: Adds a non-obvious exception beyond raw retrieval." in rendered
     assert "update_semantics: Replace when stronger counterevidence appears." in rendered
     assert "counterevidence: Exception: transfer evidence can override the pattern." in rendered
+    assert "worldview_core" not in rendered
     assert "core_context.judgment_view=accepted_view" not in rendered
+
+
+def test_policy_v2_core_atoms_group_under_section_headers() -> None:
+    atoms = [
+        _atom("central", core_context_candidate=True, atom_type="central_prototype"),
+        _atom("axis", core_context_candidate=True, atom_type="axis"),
+        _atom("cluster", core_context_candidate=True, atom_type="typical_pattern"),
+        _atom("edge", core_context_candidate=True, atom_type="boundary_case"),
+        _atom("exception", core_context_candidate=True, atom_type="exception"),
+        _atom(
+            "bias",
+            core_context_candidate=True,
+            atom_type="bias",
+            counterevidence=["Exception: local evidence overrides the bias."],
+        ),
+        _atom("update", core_context_candidate=True, atom_type="update_rule"),
+        _atom("non_update", core_context_candidate=True, atom_type="non_update_rule"),
+        _atom("deprecated", core_context_candidate=True, atom_type="deprecated_view"),
+        _atom("warning", core_context_candidate=True, atom_type="warning"),
+    ]
+
+    rendered = DslRenderer().render_core_block(atoms, include_macros=False)
+
+    for header in [
+        "CENTRAL PROTOTYPE",
+        "DISTANCE AXES",
+        "TYPICAL CLUSTERS",
+        "EDGE CASES",
+        "EXCEPTIONS",
+        "COMMON BIASES",
+        "UPDATE RULES",
+        "NON-UPDATE RULES",
+        "DEPRECATED VIEWS AND WARNINGS",
+    ]:
+        assert f"\n{header}\n" in rendered
+
+    assert "CENTRAL PROTOTYPE\n- id=central atom_type=central_prototype" in rendered
+    assert "DISTANCE AXES\n- id=axis atom_type=axis" in rendered
+    assert "TYPICAL CLUSTERS\n- id=cluster atom_type=typical_pattern" in rendered
+    assert "EDGE CASES\n- id=edge atom_type=boundary_case" in rendered
+    assert "EXCEPTIONS\n- id=exception atom_type=exception" in rendered
+    assert "COMMON BIASES\n- id=bias atom_type=bias" in rendered
+    assert "UPDATE RULES\n- id=update atom_type=update_rule" in rendered
+    assert "NON-UPDATE RULES\n- id=non_update atom_type=non_update_rule" in rendered
+    assert "DEPRECATED VIEWS AND WARNINGS\n- id=deprecated atom_type=deprecated_view" in rendered
+    assert "- id=warning atom_type=warning" in rendered
 
 
 def test_non_core_legacy_atom_keeps_compact_dsl_row() -> None:
