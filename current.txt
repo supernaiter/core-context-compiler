@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T07:38:00+09:00
+updated: 2026-06-07T07:48:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -656,12 +656,33 @@ done:
 - verification: PYTHONPATH=src python3 -m pytest tests/unit/test_expert_judgment_v2.py -q passed
 - verification: PYTHONPATH=src python3 scripts/run_expert_judgment_v2.py --out reports/expert_judgment_v2 passed
 - verification: python3 -m ruff check target #56 files passed
+- issue: #57
+- rag_search_contrast_tasks:
+  - status: implementation_complete
+  - module: src/corectx/evals/rag_contrast.py
+  - cli: scripts/run_rag_contrast.py
+  - tests:
+    - tests/unit/test_rag_contrast.py
+  - docs_summary: docs/benchmarks/rag_contrast_summary.md
+  - tasks: 75
+  - rag_trap_tasks: 45
+  - systems:
+    - naive_rag
+    - search_like_context
+    - compiled_core_context
+  - naive_rag_retrieval_success_rate: 1.0
+  - naive_rag_decision_success_rate: 0.2
+  - compiled_core_context_decision_success_rate: 1.0
+  - compiled_delta_vs_naive_rag: 2.44
+  - all_targets_pass: true
+- verification: PYTHONPATH=src python3 -m pytest tests/unit/test_rag_contrast.py -q passed
+- verification: PYTHONPATH=src python3 scripts/run_rag_contrast.py --out reports/rag_contrast passed
+- verification: python3 -m ruff check target #57 files passed
 next:
 - ready_issues_created:
-  - "#57 Add RAG/search contrast tasks that require worldview, not retrieval"
   - "#58 Add human review workflow for compiled context edits"
   - "#59 Build update-semantics benchmark for new evidence"
   - "#60 Add multi-domain external heldout validation pack"
   - "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
-- next_ready_issue: "#57 Add RAG/search contrast tasks that require worldview, not retrieval"
+- next_ready_issue: "#58 Add human review workflow for compiled context edits"
 - hourly_autopilot: will_continue_from_ready_issues
