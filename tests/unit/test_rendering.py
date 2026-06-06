@@ -122,6 +122,36 @@ def test_render_core_block_excludes_non_runtime_eligible_atoms() -> None:
     assert "active_conflict_incomplete" not in rendered
 
 
+def test_runtime_core_candidate_renders_worldview_shaped_block() -> None:
+    atom = _atom(
+        "accepted_view",
+        core_context_candidate=True,
+        atom_type="typical_pattern",
+        counterevidence=["Exception: transfer evidence can override the pattern."],
+    )
+
+    rendered = DslRenderer().render_core_block([atom], include_macros=False)
+
+    assert "worldview_core id=accepted_view atom_type=typical_pattern" in rendered
+    assert "source_ids=accepted_view-source" in rendered
+    assert "statement: core_context judgment_view accepted_view" in rendered
+    assert "centrality_effect: Changes what the runtime core treats as central." in rendered
+    assert "decision_impact: Changes downstream classification." in rendered
+    assert "baseline_delta: Adds a non-obvious exception beyond raw retrieval." in rendered
+    assert "update_semantics: Replace when stronger counterevidence appears." in rendered
+    assert "counterevidence: Exception: transfer evidence can override the pattern." in rendered
+    assert "core_context.judgment_view=accepted_view" not in rendered
+
+
+def test_non_core_legacy_atom_keeps_compact_dsl_row() -> None:
+    atom = _atom("accepted_fact")
+
+    rendered = DslRenderer().render_core_block([atom], include_macros=False)
+
+    assert rendered == "core_context.judgment_view=accepted_fact src=accepted_fact-source conf=.80"
+    assert "worldview_core" not in rendered
+
+
 def test_prompt_block_applies_runtime_core_gate() -> None:
     accepted = _atom("accepted_view", core_context_candidate=True, atom_type="axis")
     rejected = _atom("rejected_view", status="rejected", atom_type="axis")

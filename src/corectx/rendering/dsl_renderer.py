@@ -21,6 +21,27 @@ def _safe_value(value: str) -> str:
     return cleaned[:80] or "value"
 
 
+def _safe_text(value: str) -> str:
+    return " ".join(value.split()) or "none"
+
+
+def _worldview_core_block(atom: MemoryAtom) -> str:
+    counterevidence = "; ".join(_safe_text(item) for item in atom.counterevidence if item.strip())
+    return "\n".join(
+        (
+            f"worldview_core id={_safe_value(atom.id)} atom_type={atom.atom_type} "
+            f"source_ids={_sources(atom)}",
+            f"  statement: {_safe_text(atom.subject)} {_safe_text(atom.relation)} "
+            f"{_safe_text(atom.value)}",
+            f"  centrality_effect: {_safe_text(atom.centrality_effect)}",
+            f"  decision_impact: {_safe_text(atom.decision_impact)}",
+            f"  baseline_delta: {_safe_text(atom.baseline_delta)}",
+            f"  update_semantics: {_safe_text(atom.update_semantics)}",
+            f"  counterevidence: {counterevidence or 'none'}",
+        )
+    )
+
+
 class DslRenderer:
     def __init__(
         self,
@@ -58,6 +79,8 @@ class DslRenderer:
         )
 
     def render_dsl(self, atom: MemoryAtom) -> str:
+        if (atom.core_context_candidate or atom.atom_type is not None) and is_core_eligible(atom):
+            return _worldview_core_block(atom)
         src = _sources(atom)
         conf = _conf(atom.confidence)
         if atom.relation == "answer_format":

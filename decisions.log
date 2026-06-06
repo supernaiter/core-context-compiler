@@ -44,3 +44,4 @@
 2026-06-07T00:29:33+09:00 | implement Issue #50 because Policy v2 bias atoms must carry paired exceptions/counterevidence to avoid ungrounded stereotypes
 2026-06-07T01:31:31+09:00 | create and implement Issue #51 because stale/deprecated core atoms must be explicit warnings/exceptions/deprecated views to enter runtime core
 2026-06-07T02:37:34+09:00 | create and implement Issue #52 because active core conflicts need preserved counterevidence plus resolution semantics, not vague conflict_check text
+2026-06-07T03:47:59+09:00 | create and implement Issue #53 because Policy v2 runtime core must render worldview fields, not collapse complete core candidates into fact-like DSL rows
