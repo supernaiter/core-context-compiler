@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-06T19:28:02+09:00
+updated: 2026-06-06T19:29:53+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -392,6 +392,8 @@ done:
   - no_ready_behavior: create_one_policy_aligned_ready_issue_or_pause
 - issue: #45
 - policy_v2_view_atom_contract:
+  - status: closed
+  - commit: bca0a2a
   - schema: src/corectx/schemas/memory_atom.py
   - admission: src/corectx/security/admission.py
   - tests:
@@ -422,4 +424,4 @@ done:
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_schemas.py tests/unit/test_v1_long_plan_contracts.py -q incomplete; no test summary after 30s and process was killed
 - verification: uv run ruff check target not run; existing ruff PIDs 18247/37759/59902/89560 remain STAT UE/uninterruptible
 next:
-- GitHub issue #45 writeback after commit/push
+- hourly autopilot will run next eligible cycle
