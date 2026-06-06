@@ -426,6 +426,7 @@ done:
 - issue: #46
 - runtime_core_policy_gate:
   - status: implementation_complete
+  - commit: ea8301a
   - renderer: src/corectx/rendering/dsl_renderer.py
   - selector: src/corectx/scoring/budgeted_selector.py
   - tests:
