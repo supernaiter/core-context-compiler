@@ -473,6 +473,7 @@ done:
 - issue: #49
 - fact_cache_shape_admission_gate:
   - status: implementation_complete
+  - commit: 077c356
   - admission: src/corectx/security/admission.py
   - tests:
     - tests/unit/test_v1_long_plan_contracts.py
