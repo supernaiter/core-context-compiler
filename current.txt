@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T07:24:00+09:00
+updated: 2026-06-07T07:38:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -627,13 +627,41 @@ done:
 - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_baseline_subtraction.py tests/unit/test_context_audit.py incomplete; pytest startup hung without output and was killed
 - verification: .venv/bin/ruff check target #55 files incomplete; ruff PID 66288 remains STAT UE/uninterruptible
 - verification: uv run ruff check src tests scripts not rerun after target ruff entered STAT UE
+- verification: PYTHONPATH=src python3 -m pytest tests/unit/test_baseline_subtraction.py tests/unit/test_context_audit.py -q passed
+- verification: PYTHONPATH=src python3 scripts/run_baseline_subtraction.py --dataset synthetic_v2 --out reports/baseline_subtraction passed
+- verification: python3 -m ruff check target #55 files passed
+- issue: #56
+- expert_judgment_benchmark_v2:
+  - status: implementation_complete
+  - module: src/corectx/evals/expert_judgment_v2.py
+  - cli: scripts/run_expert_judgment_v2.py
+  - tests:
+    - tests/unit/test_expert_judgment_v2.py
+  - docs_summary: docs/benchmarks/expert_judgment_v2_summary.md
+  - tasks: 180
+  - domains:
+    - autonomous_domain_evolver
+    - bta_deep_hole_drilling
+    - f1_practice_intent_labeling
+  - systems:
+    - bare_llm
+    - naive_rag
+    - search_like_context
+    - rolling_summary
+    - compiled_core_context
+  - compiled_core_context_mean_EJS: 4.483
+  - compiled_delta_vs_naive_rag: 1.875
+  - compiled_bad_mistake_rate: 0.0
+  - all_targets_pass: true
+- verification: PYTHONPATH=src python3 -m pytest tests/unit/test_expert_judgment_v2.py -q passed
+- verification: PYTHONPATH=src python3 scripts/run_expert_judgment_v2.py --out reports/expert_judgment_v2 passed
+- verification: python3 -m ruff check target #56 files passed
 next:
 - ready_issues_created:
-  - "#56 Build expert judgment benchmark v2 beyond QA"
   - "#57 Add RAG/search contrast tasks that require worldview, not retrieval"
   - "#58 Add human review workflow for compiled context edits"
   - "#59 Build update-semantics benchmark for new evidence"
   - "#60 Add multi-domain external heldout validation pack"
   - "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
-- next_ready_issue: "#56 Build expert judgment benchmark v2 beyond QA"
+- next_ready_issue: "#57 Add RAG/search contrast tasks that require worldview, not retrieval"
 - hourly_autopilot: will_continue_from_ready_issues

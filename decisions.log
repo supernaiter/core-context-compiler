@@ -47,4 +47,3 @@
 2026-06-07T03:47:59+09:00 | create and implement Issue #53 because Policy v2 runtime core must render worldview fields, not collapse complete core candidates into fact-like DSL rows
 2026-06-07T04:41:30+09:00 | create ready Issues #55-#61 for north-star gaps: baseline-intuition subtraction, expert judgment v2, RAG/search contrast, human review, update semantics, multi-domain heldout validation, and North Star scorecard
 2026-06-07T04:49:04+09:00 | implement Issue #54 because Policy v2 runtime core should render a sectioned worldview document rather than isolated per-atom rows
-2026-06-07T07:18:00+09:00 | implement Issue #55 because Policy v2 baseline subtraction needs an executable keep/remove/reject harness with audit evidence
