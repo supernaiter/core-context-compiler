@@ -1,5 +1,5 @@
 project: core-context-compiler
-updated: 2026-06-07T08:05:00+09:00
+updated: 2026-06-07T08:13:00+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -718,9 +718,30 @@ done:
 - verification: PYTHONPATH=src python3 -m pytest tests/unit/test_update_semantics_benchmark.py -q passed
 - verification: PYTHONPATH=src python3 scripts/run_update_semantics_benchmark.py --out reports/update_semantics passed
 - verification: python3 -m ruff check target #59 files passed
+- issue: #60
+- multi_domain_heldout_validation:
+  - status: implementation_complete
+  - module: src/corectx/evals/multi_domain_heldout.py
+  - cli: scripts/run_multi_domain_heldout.py
+  - tests:
+    - tests/unit/test_multi_domain_heldout.py
+  - docs_summary: docs/benchmarks/multi_domain_heldout_summary.md
+  - domains:
+    - ssi_research
+    - bta_deep_hole_drilling
+    - f1_practice_intent
+  - tasks_total: 135
+  - tasks_per_domain: 45
+  - source_span_status: approximate-source
+  - compiled_core_context_mean_EJS: 4.45
+  - naive_rag_mean_EJS: 3.25
+  - wins_ties_losses: all_win
+  - all_targets_pass: true
+- verification: PYTHONPATH=src python3 -m pytest tests/unit/test_multi_domain_heldout.py -q passed
+- verification: PYTHONPATH=src python3 scripts/run_multi_domain_heldout.py --out reports/multi_domain_heldout passed
+- verification: python3 -m ruff check target #60 files passed
 next:
 - ready_issues_created:
-  - "#60 Add multi-domain external heldout validation pack"
   - "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
-- next_ready_issue: "#60 Add multi-domain external heldout validation pack"
+- next_ready_issue: "#61 Create North Star scorecard and release gate for smarter-than-RAG claim"
 - hourly_autopilot: will_continue_from_ready_issues
