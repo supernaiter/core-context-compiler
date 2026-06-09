@@ -1,0 +1,4 @@
+interface:
+  display_name: "Document Compression Codex"
+  short_description: "Compress source documents for later domain learning."
+  default_prompt: "Use document-compression-codex to compress this source document under the target token budget, preserve decision material, apply tokenizer-checked final shortening, and audit facts, numbers, units, warnings, limits, and judgment stability."
