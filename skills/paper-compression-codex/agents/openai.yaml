@@ -1,4 +1,4 @@
 interface:
   display_name: "Paper Compression Codex"
-  short_description: "Compress papers with Codex while preserving critical facts."
-  default_prompt: "Use paper-compression-codex to compress this paper under the target token budget and verify important facts, numbers, names, and judgment stability."
+  short_description: "Compress papers with Codex and tokenizer-checked final shortening."
+  default_prompt: "Use paper-compression-codex to compress this paper under the target token budget, apply tokenizer-checked final shortening, and verify important facts, numbers, names, and judgment stability."

@@ -1,6 +1,6 @@
 ---
 name: paper-compression-codex
-description: Compress academic papers or paper-like technical documents with Codex judgment when the user needs an output within a strict token budget, especially targets like at most 20% of source tokens while preserving important methods, data, results, limits, numbers, and names. Use for per-paper compression, paper body shortening after metadata/section stripping, and audits of token ratio, retained important items, exact numeric/proper-name retention, and serious judgment differences. Do not use for generic summarization.
+description: Compress academic papers or paper-like technical documents with Codex judgment when the user needs an output within a strict token budget, especially targets like at most 20% of source tokens while preserving important methods, data, results, limits, numbers, and names. Use for per-paper compression, paper body shortening after metadata/section stripping, tokenizer-guided final wording reduction, and audits of token ratio, retained important items, exact numeric/proper-name retention, and serious judgment differences. Do not use for generic summarization.
 ---
 
 # Paper Compression Codex
@@ -61,14 +61,26 @@ If the user already provides a stripped body, treat it as the source.
    - Replace repeated prose with one precise statement when the evidence is still clear.
    - Keep uncertainty words such as "may", "can", "in this setting", "on this dataset", "preliminary", and "limitation" when they affect judgment.
 
-6. If output exceeds target tokens.
+6. Apply the final token-shortening pass.
+   - Count tokens before this pass.
+   - Work sentence by sentence or bullet by bullet.
+   - For each replaceable phrase, write 2-5 same-meaning candidates and count them with `scripts/count_tokens.py --text`.
+   - Use the shortest candidate only when it preserves meaning, scope, uncertainty, polarity, numbers, names, units, and limits.
+   - Prefer short active verbs: `is used to` -> `uses`, `is able to` -> `can`, `make it possible to` -> `enable`, `in order to` -> `to`, `due to the fact that` -> `because`.
+   - Delete stop words only when meaning survives: filler adverbs, repeated subjects, empty `there is/are`, unnecessary `that`, and articles like `a`, `an`, `the`.
+   - Trim prepositions and conjunctions only in compressed labels or telegraphic bullets where the relation stays clear.
+   - Choose fewer-token equivalents for the same meaning; verify with the tokenizer instead of guessing from character length.
+   - Do not delete negation, hedges, modals, comparators, time/scope markers, causal links, limitations, warnings, proper names, numbers, units, or dataset/method labels.
+   - Count tokens after this pass and keep the before/after counts for the audit.
+
+7. If output exceeds target tokens.
    - Remove optional items first.
    - Merge repeated setup/result bullets.
    - Shorten wording, not facts.
    - Remove non-actionable future work before methods, results, or limits.
    - Never drop a required item, important number, or important name to hit the budget.
 
-7. Audit against the source.
+8. Audit against the source.
    - Count output tokens.
    - Check each required item is present.
    - Score important items as `kept/total`.
@@ -96,6 +108,8 @@ source_tokens:
 target_tokens:
 output_tokens:
 token_ratio:
+final_shortening_tokens_before:
+final_shortening_tokens_after:
 required_items:
 important_items:
 important_item_retention:
