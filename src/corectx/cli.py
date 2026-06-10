@@ -53,6 +53,12 @@ def main() -> None:
     masterbot_serve.add_argument("--holdout", default="reports/master_chatbot/holdout.jsonl")
     masterbot_serve.add_argument("--scores", default="reports/master_chatbot/master_scores.jsonl")
     masterbot_serve.add_argument("--port", type=int, default=8765)
+    masterbot_distill = masterbot_sub.add_parser("distill")
+    masterbot_distill.add_argument("--profile", default="reports/master_chatbot/profile.json")
+    masterbot_distill.add_argument("--out", default="reports/master_chatbot/distillation")
+    masterbot_distill.add_argument("--scores", default="reports/master_chatbot/master_scores.jsonl")
+    masterbot_distill.add_argument("--loops", type=int, default=10)
+    masterbot_distill.add_argument("--no-update-profile", action="store_true")
     sub.add_parser("ablate")
     benchmark_parser = sub.add_parser("benchmark")
     benchmark_parser.add_argument("--out", default="reports/cli_benchmark")
@@ -112,7 +118,7 @@ def main() -> None:
         metrics = EvalRunner().run(resolve_dataset(args.dataset), args.out)
         print(json.dumps(metrics, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "masterbot":
-        from corectx.masterbot import build_masterbot, serve_masterbot
+        from corectx.masterbot import build_masterbot, distill_masterbot, serve_masterbot
 
         if args.masterbot_command == "build":
             result = build_masterbot(
@@ -129,6 +135,15 @@ def main() -> None:
                 scores_path=args.scores,
                 port=args.port,
             )
+        elif args.masterbot_command == "distill":
+            result = distill_masterbot(
+                profile_path=args.profile,
+                out_dir=args.out,
+                scores_path=args.scores,
+                loops=args.loops,
+                update_profile=not args.no_update_profile,
+            )
+            print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "benchmark":
         from corectx.evals.token_efficiency import run_token_efficiency
 

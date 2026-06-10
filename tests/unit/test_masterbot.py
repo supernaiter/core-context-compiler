@@ -7,6 +7,7 @@ from corectx.masterbot import (
     auto_score,
     build_masterbot,
     build_prompt,
+    distill_masterbot,
     load_chat_export,
     load_split_conversations,
     redact_sensitive,
@@ -169,3 +170,63 @@ def test_auto_score_detects_hidden_answer_leak() -> None:
     score = auto_score("これはかなり長い隠し答えなので漏れたら検出できる", item)
 
     assert score["raw_answer_leak"] is True
+
+
+def test_distill_masterbot_writes_ten_loop_artifacts(tmp_path: Path) -> None:
+    profile = {
+        "counts": {"train_conversations": 2, "user_messages": 3},
+        "voice": {
+            "marker_counts": [
+                {"name": "direct_command", "count": 2},
+                {"name": "challenge", "count": 1},
+            ]
+        },
+        "compressed_rules": ["短く返す"],
+        "prohibitions": ["造語"],
+        "interest_terms": [{"term": "評価", "count": 2}],
+    }
+    profile_path = tmp_path / "profile.json"
+    profile_path.write_text(json.dumps(profile, ensure_ascii=False), encoding="utf-8")
+    out = tmp_path / "distillation"
+
+    result = distill_masterbot(profile_path, out, loops=10)
+    updated = json.loads(profile_path.read_text(encoding="utf-8"))
+
+    assert result["loops"] == 10
+    assert updated["distillation"]["loop_count"] == 10
+    assert (out / "README.md").exists()
+    assert (out / "distillation_audit.json").exists()
+    for index in range(1, 11):
+        assert (out / "loops" / f"loop_{index:02d}_review.md").exists()
+        assert (out / "loops" / f"loop_{index:02d}_compressed.md").exists()
+        assert (out / "loops" / f"loop_{index:02d}_next_view.md").exists()
+
+
+def test_distill_masterbot_can_preserve_source_profile(tmp_path: Path) -> None:
+    profile = {"counts": {}, "voice": {}, "compressed_rules": ["短く返す"]}
+    profile_path = tmp_path / "profile.json"
+    profile_path.write_text(json.dumps(profile, ensure_ascii=False), encoding="utf-8")
+
+    distill_masterbot(profile_path, tmp_path / "out", loops=1, update_profile=False)
+
+    assert json.loads(profile_path.read_text(encoding="utf-8")) == profile
+
+
+def test_distill_masterbot_ignores_smoke_score(tmp_path: Path) -> None:
+    profile_path = tmp_path / "profile.json"
+    profile_path.write_text(
+        json.dumps({"counts": {}, "voice": {}, "compressed_rules": []}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    scores_path = tmp_path / "scores.jsonl"
+    scores_path.write_text(
+        json.dumps({"item_id": "smoke", "score": "5", "notes": "smoke"}, ensure_ascii=False)
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = distill_masterbot(profile_path, tmp_path / "out", scores_path=scores_path, loops=1)
+
+    assert result["human_scored_items"] == 0
+    assert result["ignored_score_items"] == 1
+    assert result["weak_result"] is True

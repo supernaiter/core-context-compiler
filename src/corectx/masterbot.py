@@ -62,6 +62,69 @@ STOP_TERMS = {
     "んで",
 }
 
+DISTILLATION_AXES = [
+    {
+        "name": "surface_voice",
+        "label": "口調",
+        "question": "どういう短さ、圧、言い直し方をするか",
+        "signals": ["direct_command", "challenge", "speed"],
+    },
+    {
+        "name": "correction_style",
+        "label": "修正要求",
+        "question": "相手の説明がずれた時、何をどう直させるか",
+        "signals": ["challenge", "evidence"],
+    },
+    {
+        "name": "knowledge_building",
+        "label": "知識の作り方",
+        "question": "資料から何を残し、何を捨てるか",
+        "signals": ["framework", "evidence"],
+    },
+    {
+        "name": "evaluation",
+        "label": "評価",
+        "question": "賢くなったことをどう測るか",
+        "signals": ["evidence"],
+    },
+    {
+        "name": "execution",
+        "label": "実行",
+        "question": "議論をどこで作業に変えるか",
+        "signals": ["direct_command", "speed"],
+    },
+    {
+        "name": "abstraction",
+        "label": "構造化",
+        "question": "個別事例からどう構造や問いへ上げるか",
+        "signals": ["framework"],
+    },
+    {
+        "name": "tool_skepticism",
+        "label": "道具への疑い",
+        "question": "道具やモデルの出力をどこで疑うか",
+        "signals": ["challenge", "evidence"],
+    },
+    {
+        "name": "dialogue_pressure",
+        "label": "対話の圧",
+        "question": "相手をどう詰め、どう前進させるか",
+        "signals": ["challenge", "direct_command"],
+    },
+    {
+        "name": "failure_handling",
+        "label": "失敗扱い",
+        "question": "弱い結果、欠落、未完了をどう扱うか",
+        "signals": ["evidence", "challenge"],
+    },
+    {
+        "name": "integrated_prompt",
+        "label": "統合",
+        "question": "botへ渡す最終指示に何を残すか",
+        "signals": ["direct_command", "challenge", "framework", "evidence", "speed"],
+    },
+]
+
 
 @dataclass(frozen=True)
 class ChatTurn:
@@ -387,6 +450,322 @@ def build_masterbot(
         encoding="utf-8",
     )
     return manifest
+
+
+def _profile_signal_map(profile: dict[str, Any]) -> dict[str, int]:
+    marker_counts = profile.get("voice", {}).get("marker_counts", [])
+    if not isinstance(marker_counts, list):
+        return {}
+    signals: dict[str, int] = {}
+    for item in marker_counts:
+        if isinstance(item, dict) and isinstance(item.get("name"), str):
+            signals[item["name"]] = int(item.get("count") or 0)
+    return signals
+
+
+def _score_signal_map(scores: list[dict[str, Any]]) -> dict[str, int]:
+    real_scores = _real_master_scores(scores)
+    signals = {"human_scores": len(real_scores), "low_scores": 0, "notes": 0}
+    for score in real_scores:
+        raw = str(score.get("score", "")).strip()
+        if raw:
+            try:
+                if float(raw) <= 2.0:
+                    signals["low_scores"] += 1
+            except ValueError:
+                pass
+        if str(score.get("notes", "")).strip():
+            signals["notes"] += 1
+    return signals
+
+
+def _real_master_scores(scores: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    real_scores = []
+    for score in scores:
+        item_id = str(score.get("item_id", "")).strip()
+        raw_score = str(score.get("score", "")).strip()
+        if not item_id or item_id == "smoke":
+            continue
+        if not raw_score:
+            continue
+        real_scores.append(score)
+    return real_scores
+
+
+def _loop_source_summary(
+    profile: dict[str, Any],
+    scores: list[dict[str, Any]],
+    axis: dict[str, Any],
+) -> dict[str, Any]:
+    profile_signals = _profile_signal_map(profile)
+    score_signals = _score_signal_map(scores)
+    axis_counts = {
+        signal: profile_signals.get(signal, 0) for signal in axis.get("signals", [])
+    }
+    return {
+        "axis": axis["name"],
+        "label": axis["label"],
+        "question": axis["question"],
+        "counts": profile.get("counts", {}),
+        "voice": profile.get("voice", {}),
+        "axis_counts": axis_counts,
+        "score_signals": score_signals,
+        "prohibitions": profile.get("prohibitions", []),
+        "interest_terms": profile.get("interest_terms", [])[:12],
+        "previous_rules": profile.get("compressed_rules", []),
+        "previous_distilled_rules": profile.get("distilled_rules", []),
+    }
+
+
+def _derive_loop_rules(summary: dict[str, Any], loop_index: int) -> list[str]:
+    axis = summary["axis"]
+    rules_by_axis = {
+        "surface_voice": [
+            "短く答える。まず結論、次に事実、最後に弱い点。",
+            "曖昧な褒め言葉ではなく、具体物と状態を先に出す。",
+            "必要なら強く言い切るが、未確認のことは不明と言う。",
+        ],
+        "correction_style": [
+            "相手の説明がずれたら、何が違うかを普通の言葉で言い直す。",
+            "造語やそれっぽい枠組みに逃げず、思想と手順を分ける。",
+            "問いの前提が間違う時は、前提から戻す。",
+        ],
+        "knowledge_building": [
+            "大量資料から、条件、例外、失敗、制約、警告、更新規則を残す。",
+            "普通の知識との差分だけを残し、言い換えだけの要約は捨てる。",
+            "分野の構造を先に作り、その後で個別資料を配置する。",
+        ],
+        "evaluation": [
+            "賢くなったかは、holdout、比較対象、人間採点で測る。",
+            "勝った点だけでなく、外した理由と未確認範囲を残す。",
+            "結果予測、次発話予測、専門家採点のように答え合わせできる形にする。",
+        ],
+        "execution": [
+            "議論が固まったら、Issue、実装、検証、結果記録へ移す。",
+            "今日動くものを優先し、後で精密化する。",
+            "作業ログより、commit、検証結果、弱い点を残す。",
+        ],
+        "abstraction": [
+            "判断とモデル化を分ける。モデルは構造、判断は用途に対する評価。",
+            "個別例から軸、関係、反例、更新条件を抜く。",
+            "一段鋭い問いに変えるまで要約を終えない。",
+        ],
+        "tool_skepticism": [
+            "道具の出力は、情報が残ったか、圧縮率、漏れ、判断差で見る。",
+            "外部APIや自動処理は、勝手に前提へしない。",
+            "取得元、範囲、確信度、影響を残す。",
+        ],
+        "dialogue_pressure": [
+            "話が抽象に逃げたら、例、処理、成果物へ戻す。",
+            "相手が同じ失敗をしたら、なぜ検証にならないかを明確に言う。",
+            "必要な時は短く詰めて、次の実行へ進める。",
+        ],
+        "failure_handling": [
+            "未実施、未検証、弱い結果を先に言う。",
+            "失敗は隠さず、次の打ち手に変換する。",
+            "期待した処理と実際の処理の差分を記録する。",
+        ],
+        "integrated_prompt": [
+            "本人のふりをしすぎず、検証用botとして振る舞う。",
+            "短く、具体的に、普通の言葉で、強い問いを返す。",
+            "知識蒸留の文脈では、圧縮、構造化、差分、評価、失敗を常に見る。",
+        ],
+    }
+    rules = list(rules_by_axis[axis])
+    if summary["score_signals"]["human_scores"] == 0:
+        rules.append("人間採点が無い時は、検証済みとは言わない。")
+    if loop_index >= 6:
+        rules.append("前ループまでの規則を統合し、重複する言い換えを削る。")
+    return rules
+
+
+def _merge_distilled_profile(
+    profile: dict[str, Any],
+    summary: dict[str, Any],
+    rules: list[str],
+    loop_index: int,
+) -> dict[str, Any]:
+    next_profile = json.loads(json.dumps(profile, ensure_ascii=False))
+    history = list(next_profile.get("distillation_history", []))
+    history.append(
+        {
+            "loop": loop_index,
+            "axis": summary["axis"],
+            "label": summary["label"],
+            "question": summary["question"],
+            "rules_added": rules,
+        }
+    )
+    distilled_rules: list[str] = []
+    for rule in list(next_profile.get("distilled_rules", [])) + rules:
+        if rule not in distilled_rules:
+            distilled_rules.append(rule)
+    next_profile["distillation"] = {
+        "loop_count": loop_index,
+        "method": "compressed-profile review loop",
+        "raw_history_sent_to_model": False,
+        "human_scored_items": summary["score_signals"]["human_scores"],
+        "weak_result": summary["score_signals"]["human_scores"] == 0,
+    }
+    next_profile["distilled_rules"] = distilled_rules[-28:]
+    next_profile["compressed_rules"] = distilled_rules[-12:]
+    next_profile["distillation_history"] = history
+    next_profile["current_view"] = {
+        "loop": loop_index,
+        "axis": summary["axis"],
+        "question": summary["question"],
+        "bot_should_notice": rules[:4],
+    }
+    return _redact_json(next_profile)
+
+
+def _markdown_list(items: list[Any]) -> str:
+    if not items:
+        return "- none\n"
+    lines = []
+    for item in items:
+        if isinstance(item, dict):
+            text = json.dumps(item, ensure_ascii=False, sort_keys=True)
+        else:
+            text = str(item)
+        lines.append(f"- {text}")
+    return "\n".join(lines) + "\n"
+
+
+def _write_loop_files(
+    loops_dir: Path,
+    loop_index: int,
+    summary: dict[str, Any],
+    profile: dict[str, Any],
+    rules: list[str],
+) -> None:
+    prefix = f"loop_{loop_index:02d}"
+    review = [
+        f"# Loop {loop_index:02d} Review",
+        "",
+        f"- axis: {summary['axis']}",
+        f"- label: {summary['label']}",
+        f"- question: {summary['question']}",
+        f"- source_user_messages: {summary.get('counts', {}).get('user_messages', 0)}",
+        f"- human_scored_items: {summary['score_signals']['human_scores']}",
+        "",
+        "## Source Signals",
+        _markdown_list([summary["axis_counts"]]),
+        "## What This Loop Changes",
+        _markdown_list(rules),
+        "## Weak Result",
+        "- human scoring is not available yet; this loop is profile-derived, not validated by master scores.\n"
+        if summary["score_signals"]["human_scores"] == 0
+        else "- human scoring exists but still needs manual interpretation.\n",
+    ]
+    compressed = [
+        f"# Loop {loop_index:02d} Compressed Profile",
+        "",
+        "## Distilled Rules",
+        _markdown_list(profile.get("distilled_rules", [])),
+        "## Current View",
+        "```json",
+        json.dumps(profile.get("current_view", {}), ensure_ascii=False, indent=2, sort_keys=True),
+        "```",
+    ]
+    next_view = [
+        f"# Loop {loop_index:02d} Next View",
+        "",
+        f"- next_axis: {summary['axis']}",
+        f"- next_question: {summary['question']}",
+        "- use_for_bot: yes",
+        "",
+        "## Bot Rules For Next Loop",
+        _markdown_list(profile.get("compressed_rules", [])),
+        "## Next Questions",
+        _markdown_list(
+            [
+                "この返答は短く具体的か",
+                "普通の言葉で思想と手順を分けているか",
+                "弱い点、未検証、次の打ち手を出しているか",
+                "生ログを暗唱していないか",
+            ]
+        ),
+    ]
+    (loops_dir / f"{prefix}_review.md").write_text("\n".join(review), encoding="utf-8")
+    (loops_dir / f"{prefix}_compressed.md").write_text(
+        "\n".join(compressed), encoding="utf-8"
+    )
+    (loops_dir / f"{prefix}_next_view.md").write_text("\n".join(next_view), encoding="utf-8")
+
+
+def distill_masterbot(
+    profile_path: str | Path,
+    out_dir: str | Path,
+    *,
+    scores_path: str | Path | None = None,
+    loops: int = 10,
+    update_profile: bool = True,
+) -> dict[str, Any]:
+    profile_source = Path(profile_path)
+    out = Path(out_dir)
+    loops_dir = out / "loops"
+    loops_dir.mkdir(parents=True, exist_ok=True)
+    profile = json.loads(profile_source.read_text(encoding="utf-8"))
+    scores = load_jsonl(scores_path) if scores_path else []
+    real_scores = _real_master_scores(scores)
+    total_loops = min(loops, len(DISTILLATION_AXES))
+    for loop_index, axis in enumerate(DISTILLATION_AXES[:total_loops], start=1):
+        summary = _loop_source_summary(profile, scores, axis)
+        rules = _derive_loop_rules(summary, loop_index)
+        profile = _merge_distilled_profile(profile, summary, rules, loop_index)
+        _write_loop_files(loops_dir, loop_index, summary, profile, rules)
+
+    final_profile = out / "profile_distilled.json"
+    final_profile.write_text(
+        json.dumps(profile, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    if update_profile:
+        profile_source.write_text(
+            json.dumps(profile, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    audit = {
+        "created_at": datetime.now(UTC).isoformat(),
+        "loops": total_loops,
+        "profile_path": str(profile_source),
+        "final_profile_path": str(final_profile),
+        "updated_profile": update_profile,
+        "raw_logs_committed": False,
+        "raw_history_sent_to_model": False,
+        "human_scored_items": len(real_scores),
+        "ignored_score_items": len(scores) - len(real_scores),
+        "weak_result": len(real_scores) == 0,
+    }
+    (out / "distillation_audit.json").write_text(
+        json.dumps(audit, ensure_ascii=False, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    readme = [
+        "# Masterbot 10-loop Distillation",
+        "",
+        f"- loops: {total_loops}",
+        f"- final_profile: {final_profile}",
+        f"- updated_profile: {update_profile}",
+        f"- human_scored_items: {len(real_scores)}",
+        f"- ignored_score_items: {len(scores) - len(real_scores)}",
+        "- raw_logs_committed: false",
+        "- raw_history_sent_to_model: false",
+        "",
+        "## Files",
+        "- loops/loop_XX_review.md",
+        "- loops/loop_XX_compressed.md",
+        "- loops/loop_XX_next_view.md",
+        "- profile_distilled.json",
+        "- distillation_audit.json",
+        "",
+        "## Weak Result",
+        "- This run uses compressed profile signals and saved human scores only.",
+        "- If human scores are absent or only smoke data, the loop is not a full behavioral validation.",
+    ]
+    (out / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
+    return audit
 
 
 def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
