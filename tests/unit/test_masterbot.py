@@ -149,11 +149,14 @@ def test_redaction_patterns() -> None:
     assert "ghp_abcdefghijklmnop123456" not in redacted
 
 
-def test_prompt_uses_compressed_profile() -> None:
+def test_prompt_uses_distilled_source_view_not_voice_profile() -> None:
     profile = {
         "voice": {"question_ratio": 1.0},
-        "question_patterns": ["具体例で試す"],
-        "prohibitions": ["造語"],
+        "question_patterns": ["これは使わない"],
+        "source_signals": {"question_ratio": 1.0},
+        "recurring_questions": ["具体例で試す"],
+        "distillation": {"loop_count": 10},
+        "distilled_source_view": {"kept": {"principles": ["知識を差分で残す"]}},
         "judgment_habits": ["弱い結果を隠さない"],
         "work_rules": ["Issueを使う"],
         "interest_terms": [{"term": "F1", "count": 2}],
@@ -163,8 +166,11 @@ def test_prompt_uses_compressed_profile() -> None:
     messages = build_prompt(profile, "profile+rules", "sk-secret999999999999999999 を使う？")
     prompt_text = json.dumps(messages, ensure_ascii=False)
 
-    assert "具体例で試す" in prompt_text
+    assert "知識を差分で残す" in prompt_text
     assert "短く返す" in prompt_text
+    assert "これは使わない" not in prompt_text
+    assert '"voice"' not in prompt_text
+    assert "question_patterns" not in prompt_text
     assert "sk-secret999999999999999999" not in prompt_text
 
 
@@ -183,6 +189,11 @@ def test_distill_masterbot_writes_ten_loop_artifacts(tmp_path: Path) -> None:
             "marker_counts": [
                 {"name": "direct_command", "count": 2},
                 {"name": "challenge", "count": 1},
+            ]
+        },
+        "source_signals": {
+            "marker_counts": [
+                {"name": "turns_discussion_into_work", "count": 2},
             ]
         },
         "compressed_rules": ["短く返す"],

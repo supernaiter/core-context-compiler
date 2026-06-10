@@ -251,7 +251,7 @@ def build_profile(
         if count
     ]
     profile = {
-        "what_this_is": "個人チャット履歴から作った検証用botの圧縮プロファイル。本人そのものではない。",
+        "what_this_is": "個人チャット履歴を資料束として圧縮した、知識蒸留検証用profile。",
         "source_policy": {
             "raw_logs_committed": False,
             "model_receives_raw_history": False,
@@ -262,14 +262,12 @@ def build_profile(
             "user_messages": len(texts),
             "user_chars": total_chars,
         },
-        "voice": {
-            "short_direct_japanese": True,
-            "uses_pressure_to_correct_agent": marker_counts.get("challenge", 0) > 0,
+        "source_signals": {
             "question_ratio": round(question_count / max(len(texts), 1), 4),
             "command_ratio": round(command_count / max(len(texts), 1), 4),
             "marker_counts": top_markers,
         },
-        "question_patterns": [
+        "recurring_questions": [
             "まず前提と流れを確認する",
             "判断とモデル化を分けて問い直す",
             "具体例で試してから評価する",
@@ -788,7 +786,7 @@ def distill_masterbot(
                 "source_id": "profile_fallback",
                 "title_hint": "profile fallback",
                 "user_turns": profile.get("counts", {}).get("user_messages", 0),
-                "moves": profile.get("voice", {}).get("marker_counts", []),
+                "moves": profile.get("source_signals", {}).get("marker_counts", []),
                 "terms": profile.get("interest_terms", []),
                 "compressed_evidence": [
                     "source_bundle.jsonl missing; using compressed profile only"
@@ -877,18 +875,18 @@ def build_prompt(profile: dict[str, Any], mode: str, user_message: str) -> list[
     system_parts = [
         "あなたは検証用チャットbotです。",
         "本人ではない。個人の生ログを暗唱しない。",
-        "日本語で短く、具体的に返す。",
+        "根拠、範囲、未検証点を分けて返す。",
     ]
     if mode in {"profile", "profile+rules"}:
         allowed = {
-            "voice": profile.get("voice"),
-            "question_patterns": profile.get("question_patterns"),
-            "prohibitions": profile.get("prohibitions"),
+            "distillation": profile.get("distillation"),
+            "distilled_source_view": profile.get("distilled_source_view"),
+            "recurring_questions": profile.get("recurring_questions"),
             "judgment_habits": profile.get("judgment_habits"),
             "work_rules": profile.get("work_rules"),
             "interest_terms": profile.get("interest_terms"),
         }
-        system_parts.append("圧縮プロファイル:")
+        system_parts.append("蒸留済みsource view:")
         system_parts.append(json.dumps(_redact_json(allowed), ensure_ascii=False, sort_keys=True))
     if mode == "profile+rules":
         system_parts.append("圧縮ルール:")
