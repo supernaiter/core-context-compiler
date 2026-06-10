@@ -41,6 +41,18 @@ def main() -> None:
     eval_parser.add_argument("--dataset", default="datasets/synthetic_v2")
     eval_parser.add_argument("--system", default="full_compiler")
     eval_parser.add_argument("--out", default="reports/cli_eval")
+    masterbot_parser = sub.add_parser("masterbot")
+    masterbot_sub = masterbot_parser.add_subparsers(dest="masterbot_command", required=True)
+    masterbot_build = masterbot_sub.add_parser("build")
+    masterbot_build.add_argument("--chat-root", required=True)
+    masterbot_build.add_argument("--out", default="reports/master_chatbot")
+    masterbot_build.add_argument("--holdout-ratio", type=float, default=0.1)
+    masterbot_build.add_argument("--max-examples", type=int, default=24)
+    masterbot_serve = masterbot_sub.add_parser("serve")
+    masterbot_serve.add_argument("--profile", default="reports/master_chatbot/profile.json")
+    masterbot_serve.add_argument("--holdout", default="reports/master_chatbot/holdout.jsonl")
+    masterbot_serve.add_argument("--scores", default="reports/master_chatbot/master_scores.jsonl")
+    masterbot_serve.add_argument("--port", type=int, default=8765)
     sub.add_parser("ablate")
     benchmark_parser = sub.add_parser("benchmark")
     benchmark_parser.add_argument("--out", default="reports/cli_benchmark")
@@ -99,6 +111,24 @@ def main() -> None:
 
         metrics = EvalRunner().run(resolve_dataset(args.dataset), args.out)
         print(json.dumps(metrics, ensure_ascii=False, indent=2, sort_keys=True))
+    elif args.command == "masterbot":
+        from corectx.masterbot import build_masterbot, serve_masterbot
+
+        if args.masterbot_command == "build":
+            result = build_masterbot(
+                chat_root=args.chat_root,
+                out_dir=args.out,
+                holdout_ratio=args.holdout_ratio,
+                max_examples=args.max_examples,
+            )
+            print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+        elif args.masterbot_command == "serve":
+            serve_masterbot(
+                profile_path=args.profile,
+                holdout_path=args.holdout,
+                scores_path=args.scores,
+                port=args.port,
+            )
     elif args.command == "benchmark":
         from corectx.evals.token_efficiency import run_token_efficiency
 
