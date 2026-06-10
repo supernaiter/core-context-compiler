@@ -55,6 +55,10 @@ def main() -> None:
     masterbot_serve.add_argument("--port", type=int, default=8765)
     masterbot_distill = masterbot_sub.add_parser("distill")
     masterbot_distill.add_argument("--profile", default="reports/master_chatbot/profile.json")
+    masterbot_distill.add_argument(
+        "--source-bundle",
+        default="reports/master_chatbot/source_bundle.jsonl",
+    )
     masterbot_distill.add_argument("--out", default="reports/master_chatbot/distillation")
     masterbot_distill.add_argument("--scores", default="reports/master_chatbot/master_scores.jsonl")
     masterbot_distill.add_argument("--loops", type=int, default=10)
@@ -139,6 +143,7 @@ def main() -> None:
             result = distill_masterbot(
                 profile_path=args.profile,
                 out_dir=args.out,
+                source_bundle_path=args.source_bundle,
                 scores_path=args.scores,
                 loops=args.loops,
                 update_profile=not args.no_update_profile,

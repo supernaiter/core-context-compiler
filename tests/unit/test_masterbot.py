@@ -9,7 +9,9 @@ from corectx.masterbot import (
     build_prompt,
     distill_masterbot,
     load_chat_export,
+    load_jsonl,
     load_split_conversations,
+    make_source_records,
     redact_sensitive,
     split_name,
 )
@@ -122,6 +124,8 @@ def test_build_masterbot_redacts_profile_and_keeps_holdout_separate(tmp_path: Pa
     assert "sk-secretABC123456789" not in profile_text
     assert "これは隠す答えです" not in profile_text
     assert "これは隠す答えです" in holdout_text
+    assert (out / "source_bundle.jsonl").exists()
+    assert result["source_records"] == 1
 
 
 def test_load_split_conversations_accepts_project_root_with_sorted_chats(tmp_path: Path) -> None:
@@ -187,19 +191,40 @@ def test_distill_masterbot_writes_ten_loop_artifacts(tmp_path: Path) -> None:
     }
     profile_path = tmp_path / "profile.json"
     profile_path.write_text(json.dumps(profile, ensure_ascii=False), encoding="utf-8")
+    source_bundle = tmp_path / "source_bundle.jsonl"
+    source_bundle.write_text(
+        json.dumps(
+            {
+                "source_id": "s1",
+                "title_hint": "資料圧縮",
+                "user_turns": 2,
+                "moves": [{"name": "builds_knowledge_from_many_sources", "count": 2}],
+                "terms": [{"term": "評価", "count": 2}],
+                "compressed_evidence": ["大量の資料から構造を作り、評価できる形にする"],
+            },
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     out = tmp_path / "distillation"
 
-    result = distill_masterbot(profile_path, out, loops=10)
+    result = distill_masterbot(profile_path, out, source_bundle_path=source_bundle, loops=10)
     updated = json.loads(profile_path.read_text(encoding="utf-8"))
 
     assert result["loops"] == 10
+    assert result["source_records"] == 1
     assert updated["distillation"]["loop_count"] == 10
+    assert updated["distillation"]["method"] == "source bundle review/compress/next_view loop"
     assert (out / "README.md").exists()
     assert (out / "distillation_audit.json").exists()
     for index in range(1, 11):
         assert (out / "loops" / f"loop_{index:02d}_review.md").exists()
         assert (out / "loops" / f"loop_{index:02d}_compressed.md").exists()
         assert (out / "loops" / f"loop_{index:02d}_next_view.md").exists()
+    loop_text = (out / "loops" / "loop_01_review.md").read_text(encoding="utf-8")
+    assert "Source Reading" in loop_text
+    assert "口調" not in loop_text
 
 
 def test_distill_masterbot_can_preserve_source_profile(tmp_path: Path) -> None:
@@ -230,3 +255,39 @@ def test_distill_masterbot_ignores_smoke_score(tmp_path: Path) -> None:
     assert result["human_scored_items"] == 0
     assert result["ignored_score_items"] == 1
     assert result["weak_result"] is True
+
+
+def test_make_source_records_compresses_chat_without_full_raw_dump(tmp_path: Path) -> None:
+    path = tmp_path / "chat.json"
+    _write_chat(
+        path,
+        "conv-source",
+        "知識蒸留相談",
+        [
+            ("user", "大量の資料を圧縮して構造を作り、評価で測れるようにしたい"),
+            ("assistant", "できます"),
+            ("user", "意味がわからん。普通の言葉でフローを言って"),
+        ],
+    )
+    conversation = load_chat_export(path)
+    assert conversation is not None
+
+    records = make_source_records([conversation])
+
+    assert records[0]["title_hint"] == "知識蒸留相談"
+    move_names = {item["name"] for item in records[0]["moves"]}
+    assert "builds_knowledge_from_many_sources" in move_names
+    assert "rejects_vague_or_wrong_frame" in move_names
+    assert records[0]["source_scope"] == "redacted compressed user turns from one chat conversation"
+
+
+def test_load_jsonl_keeps_unicode_line_separator_inside_json_string(tmp_path: Path) -> None:
+    path = tmp_path / "data.jsonl"
+    path.write_text(
+        json.dumps({"text": "a\u2028b"}, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    rows = load_jsonl(path)
+
+    assert rows == [{"text": "a\u2028b"}]

@@ -62,67 +62,17 @@ STOP_TERMS = {
     "んで",
 }
 
-DISTILLATION_AXES = [
-    {
-        "name": "surface_voice",
-        "label": "口調",
-        "question": "どういう短さ、圧、言い直し方をするか",
-        "signals": ["direct_command", "challenge", "speed"],
-    },
-    {
-        "name": "correction_style",
-        "label": "修正要求",
-        "question": "相手の説明がずれた時、何をどう直させるか",
-        "signals": ["challenge", "evidence"],
-    },
-    {
-        "name": "knowledge_building",
-        "label": "知識の作り方",
-        "question": "資料から何を残し、何を捨てるか",
-        "signals": ["framework", "evidence"],
-    },
-    {
-        "name": "evaluation",
-        "label": "評価",
-        "question": "賢くなったことをどう測るか",
-        "signals": ["evidence"],
-    },
-    {
-        "name": "execution",
-        "label": "実行",
-        "question": "議論をどこで作業に変えるか",
-        "signals": ["direct_command", "speed"],
-    },
-    {
-        "name": "abstraction",
-        "label": "構造化",
-        "question": "個別事例からどう構造や問いへ上げるか",
-        "signals": ["framework"],
-    },
-    {
-        "name": "tool_skepticism",
-        "label": "道具への疑い",
-        "question": "道具やモデルの出力をどこで疑うか",
-        "signals": ["challenge", "evidence"],
-    },
-    {
-        "name": "dialogue_pressure",
-        "label": "対話の圧",
-        "question": "相手をどう詰め、どう前進させるか",
-        "signals": ["challenge", "direct_command"],
-    },
-    {
-        "name": "failure_handling",
-        "label": "失敗扱い",
-        "question": "弱い結果、欠落、未完了をどう扱うか",
-        "signals": ["evidence", "challenge"],
-    },
-    {
-        "name": "integrated_prompt",
-        "label": "統合",
-        "question": "botへ渡す最終指示に何を残すか",
-        "signals": ["direct_command", "challenge", "framework", "evidence", "speed"],
-    },
+SOURCE_REVIEW_SEED_VIEWS = [
+    "まず圧縮済みsource bundle全体を読み、何の資料群か、何に使える知識かを整理する。",
+    "前回viewで見落とした問い、判断基準、作業目的をsource bundleから拾い直す。",
+    "決定、禁止、制約、前提、未完了をsource bundle内の根拠へ結び直す。",
+    "失敗、詰まり、訂正、やり直し要求を読み、どの条件で判断が変わるかを出す。",
+    "個別の会話から、反復する構造、抽象化、モデル化の型を作る。",
+    "評価方法、答え合わせ方法、弱い結果の扱いをsource bundleから抽出する。",
+    "実装、Issue、検証、記録へ移る条件をsource bundleから抽出する。",
+    "古い見方、反例、警告、更新が必要な規則を残す。",
+    "次のbotに渡すため、source bundleから普通の知識との差分だけに圧縮する。",
+    "全loopを統合し、chatbotが参照する最終viewと未検証点を作る。",
 ]
 
 
@@ -349,6 +299,99 @@ def build_profile(
     return _redact_json(profile)
 
 
+def _source_moves(text: str) -> list[str]:
+    moves = []
+    if any(word in text for word in ["どう", "何", "なぜ", "フロー", "流れ"]):
+        moves.append("asks_for_process_or_reason")
+    if any(word in text for word in ["意味がわから", "違う", "造語", "冷静"]):
+        moves.append("rejects_vague_or_wrong_frame")
+    if any(word in text for word in ["実装", "作成", "Issue", "commit", "検証"]):
+        moves.append("turns_discussion_into_work")
+    if any(word in text for word in ["圧縮", "蒸留", "大量", "資料", "文献"]):
+        moves.append("builds_knowledge_from_many_sources")
+    if any(word in text for word in ["評価", "測", "ベンチ", "予測", "採点"]):
+        moves.append("asks_for_measurable_evaluation")
+    if any(word in text for word in ["構造", "モデル", "体系", "抽象", "視点"]):
+        moves.append("asks_for_structure_or_view")
+    if any(word in text for word in ["弱い", "未完", "欠け", "失敗", "警告"]):
+        moves.append("forces_limits_and_failures")
+    return moves or ["general_dialogue"]
+
+
+def make_source_records(
+    conversations: list[ChatConversation],
+    *,
+    limit: int = 600,
+) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for conversation in conversations:
+        user_texts = [
+            redact_sensitive(turn.text)
+            for turn in conversation.turns
+            if turn.role == "user" and turn.text.strip()
+        ]
+        if not user_texts:
+            continue
+        moves: dict[str, int] = {}
+        for text in user_texts:
+            for move in _source_moves(text):
+                moves[move] = moves.get(move, 0) + 1
+        record = {
+            "source_id": hashlib.sha256(conversation.conversation_id.encode()).hexdigest()[:16],
+            "title_hint": _title_hint(conversation.title),
+            "create_time": conversation.create_time,
+            "user_turns": len(user_texts),
+            "assistant_turns": sum(1 for turn in conversation.turns if turn.role == "assistant"),
+            "terms": _top_terms(user_texts + [conversation.title], limit=16),
+            "moves": [
+                {"name": name, "count": count}
+                for name, count in sorted(moves.items(), key=lambda item: (-item[1], item[0]))
+            ],
+            "compressed_evidence": [
+                text.replace("\n", " ")[:220]
+                for text in user_texts
+                if any(move != "general_dialogue" for move in _source_moves(text))
+            ][:5],
+            "source_scope": "redacted compressed user turns from one chat conversation",
+        }
+        records.append(record)
+        if len(records) >= limit:
+            break
+    return records
+
+
+def write_source_bundle(records: list[dict[str, Any]], out_dir: str | Path) -> dict[str, Any]:
+    out = Path(out_dir)
+    jsonl_path = out / "source_bundle.jsonl"
+    md_path = out / "source_bundle.md"
+    with jsonl_path.open("w", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+    lines = [
+        "# Masterbot Source Bundle",
+        "",
+        "- input: raw sorted ChatGPT export JSON",
+        "- content: redacted compressed records",
+        "- raw_logs_committed: false",
+        "- raw_history_sent_to_model: false",
+        "",
+    ]
+    for record in records:
+        lines.append(f"## {record['source_id']} {record['title_hint']}")
+        lines.append(f"- user_turns: {record['user_turns']}")
+        lines.append("- moves:")
+        lines.extend(f"  - {item['name']}: {item['count']}" for item in record["moves"])
+        lines.append("- terms:")
+        lines.extend(f"  - {item['term']}: {item['count']}" for item in record["terms"][:8])
+        lines.append("")
+    md_path.write_text("\n".join(lines), encoding="utf-8")
+    return {
+        "source_bundle_jsonl": str(jsonl_path),
+        "source_bundle_md": str(md_path),
+        "source_records": len(records),
+    }
+
+
 def _redact_json(value: Any) -> Any:
     if isinstance(value, str):
         return redact_sensitive(value)
@@ -424,6 +467,8 @@ def build_masterbot(
     out.mkdir(parents=True, exist_ok=True)
     train, holdout = load_split_conversations(chat_root, holdout_ratio=holdout_ratio)
     profile = build_profile(train, max_examples=max_examples)
+    source_records = make_source_records(train)
+    source_bundle = write_source_bundle(source_records, out)
     eval_items = make_eval_items(holdout)
     manifest = {
         "created_at": datetime.now(UTC).isoformat(),
@@ -433,6 +478,7 @@ def build_masterbot(
         "holdout_items": len(eval_items),
         "profile_path": str(out / "profile.json"),
         "holdout_path": str(out / "holdout.jsonl"),
+        **source_bundle,
         "privacy": {
             "raw_logs_committed": False,
             "model_receives_raw_history": False,
@@ -450,17 +496,6 @@ def build_masterbot(
         encoding="utf-8",
     )
     return manifest
-
-
-def _profile_signal_map(profile: dict[str, Any]) -> dict[str, int]:
-    marker_counts = profile.get("voice", {}).get("marker_counts", [])
-    if not isinstance(marker_counts, list):
-        return {}
-    signals: dict[str, int] = {}
-    for item in marker_counts:
-        if isinstance(item, dict) and isinstance(item.get("name"), str):
-            signals[item["name"]] = int(item.get("count") or 0)
-    return signals
 
 
 def _score_signal_map(scores: list[dict[str, Any]]) -> dict[str, int]:
@@ -492,97 +527,132 @@ def _real_master_scores(scores: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return real_scores
 
 
-def _loop_source_summary(
-    profile: dict[str, Any],
-    scores: list[dict[str, Any]],
-    axis: dict[str, Any],
-) -> dict[str, Any]:
-    profile_signals = _profile_signal_map(profile)
-    score_signals = _score_signal_map(scores)
-    axis_counts = {
-        signal: profile_signals.get(signal, 0) for signal in axis.get("signals", [])
-    }
+def summarize_source_records(records: list[dict[str, Any]]) -> dict[str, Any]:
+    move_counts: dict[str, int] = {}
+    term_counts: dict[str, int] = {}
+    for record in records:
+        for move in record.get("moves", []):
+            if isinstance(move, dict):
+                name = str(move.get("name", ""))
+                move_counts[name] = move_counts.get(name, 0) + int(move.get("count") or 0)
+        for term in record.get("terms", []):
+            if isinstance(term, dict):
+                name = str(term.get("term", ""))
+                term_counts[name] = term_counts.get(name, 0) + int(term.get("count") or 0)
     return {
-        "axis": axis["name"],
-        "label": axis["label"],
-        "question": axis["question"],
-        "counts": profile.get("counts", {}),
-        "voice": profile.get("voice", {}),
-        "axis_counts": axis_counts,
-        "score_signals": score_signals,
-        "prohibitions": profile.get("prohibitions", []),
-        "interest_terms": profile.get("interest_terms", [])[:12],
-        "previous_rules": profile.get("compressed_rules", []),
-        "previous_distilled_rules": profile.get("distilled_rules", []),
+        "source_records": len(records),
+        "top_moves": [
+            {"name": name, "count": count}
+            for name, count in sorted(move_counts.items(), key=lambda item: (-item[1], item[0]))[:16]
+        ],
+        "top_terms": [
+            {"term": name, "count": count}
+            for name, count in sorted(term_counts.items(), key=lambda item: (-item[1], item[0]))[:24]
+        ],
+    }
+
+
+def _selected_records_for_view(
+    records: list[dict[str, Any]],
+    previous_view: str,
+    *,
+    limit: int = 18,
+) -> list[dict[str, Any]]:
+    view_terms = set(re.findall(r"[一-龥ァ-ヶーA-Za-z0-9_+-]{2,}", previous_view))
+    scored: list[tuple[int, dict[str, Any]]] = []
+    for record in records:
+        text = json.dumps(record, ensure_ascii=False)
+        score = sum(1 for term in view_terms if term in text)
+        score += len(record.get("compressed_evidence", []))
+        score += int(record.get("user_turns") or 0) // 3
+        scored.append((score, record))
+    return [record for _, record in sorted(scored, key=lambda item: (-item[0], item[1]["source_id"]))[:limit]]
+
+
+def _review_source_bundle(
+    records: list[dict[str, Any]],
+    previous_view: str,
+    loop_index: int,
+    scores: list[dict[str, Any]],
+) -> dict[str, Any]:
+    summary = summarize_source_records(records)
+    selected = _selected_records_for_view(records, previous_view)
+    selected_moves: dict[str, int] = {}
+    selected_terms: dict[str, int] = {}
+    evidence: list[str] = []
+    for record in selected:
+        for move in record.get("moves", []):
+            selected_moves[move["name"]] = selected_moves.get(move["name"], 0) + int(move["count"])
+        for term in record.get("terms", []):
+            selected_terms[term["term"]] = selected_terms.get(term["term"], 0) + int(term["count"])
+        evidence.extend(record.get("compressed_evidence", [])[:2])
+    top_moves = [
+        {"name": name, "count": count}
+        for name, count in sorted(selected_moves.items(), key=lambda item: (-item[1], item[0]))[:10]
+    ]
+    top_terms = [
+        {"term": name, "count": count}
+        for name, count in sorted(selected_terms.items(), key=lambda item: (-item[1], item[0]))[:12]
+    ]
+    source_reading = [
+        f"source bundleは{summary['source_records']}件の圧縮会話記録。",
+        "反復しているのは、資料を大量に読み、構造を作り、測れる形に落とす要求。",
+        "表面再現ではなく、問い、判断材料、作業化、失敗扱いを残す必要がある。",
+    ]
+    if loop_index >= 4:
+        source_reading.append("前loopのviewを使い、欠落、例外、未検証点を優先して読む。")
+    if loop_index >= 8:
+        source_reading.append("最終botへ渡すため、普通の知識ではなく差分だけに寄せる。")
+    return {
+        "loop": loop_index,
+        "previous_view": previous_view,
+        "source_summary": summary,
+        "selected_source_count": len(selected),
+        "top_moves": top_moves,
+        "top_terms": top_terms,
+        "source_reading": source_reading,
+        "compressed_evidence": evidence[:12],
+        "score_signals": _score_signal_map(scores),
     }
 
 
-def _derive_loop_rules(summary: dict[str, Any], loop_index: int) -> list[str]:
-    axis = summary["axis"]
-    rules_by_axis = {
-        "surface_voice": [
-            "短く答える。まず結論、次に事実、最後に弱い点。",
-            "曖昧な褒め言葉ではなく、具体物と状態を先に出す。",
-            "必要なら強く言い切るが、未確認のことは不明と言う。",
-        ],
-        "correction_style": [
-            "相手の説明がずれたら、何が違うかを普通の言葉で言い直す。",
-            "造語やそれっぽい枠組みに逃げず、思想と手順を分ける。",
-            "問いの前提が間違う時は、前提から戻す。",
-        ],
-        "knowledge_building": [
-            "大量資料から、条件、例外、失敗、制約、警告、更新規則を残す。",
-            "普通の知識との差分だけを残し、言い換えだけの要約は捨てる。",
-            "分野の構造を先に作り、その後で個別資料を配置する。",
-        ],
-        "evaluation": [
-            "賢くなったかは、holdout、比較対象、人間採点で測る。",
-            "勝った点だけでなく、外した理由と未確認範囲を残す。",
-            "結果予測、次発話予測、専門家採点のように答え合わせできる形にする。",
-        ],
-        "execution": [
-            "議論が固まったら、Issue、実装、検証、結果記録へ移す。",
-            "今日動くものを優先し、後で精密化する。",
-            "作業ログより、commit、検証結果、弱い点を残す。",
-        ],
-        "abstraction": [
-            "判断とモデル化を分ける。モデルは構造、判断は用途に対する評価。",
-            "個別例から軸、関係、反例、更新条件を抜く。",
-            "一段鋭い問いに変えるまで要約を終えない。",
-        ],
-        "tool_skepticism": [
-            "道具の出力は、情報が残ったか、圧縮率、漏れ、判断差で見る。",
-            "外部APIや自動処理は、勝手に前提へしない。",
-            "取得元、範囲、確信度、影響を残す。",
-        ],
-        "dialogue_pressure": [
-            "話が抽象に逃げたら、例、処理、成果物へ戻す。",
-            "相手が同じ失敗をしたら、なぜ検証にならないかを明確に言う。",
-            "必要な時は短く詰めて、次の実行へ進める。",
-        ],
-        "failure_handling": [
-            "未実施、未検証、弱い結果を先に言う。",
-            "失敗は隠さず、次の打ち手に変換する。",
-            "期待した処理と実際の処理の差分を記録する。",
-        ],
-        "integrated_prompt": [
-            "本人のふりをしすぎず、検証用botとして振る舞う。",
-            "短く、具体的に、普通の言葉で、強い問いを返す。",
-            "知識蒸留の文脈では、圧縮、構造化、差分、評価、失敗を常に見る。",
-        ],
+def _compress_review(review: dict[str, Any]) -> dict[str, Any]:
+    principles = [
+        "大量資料をそのまま覚えず、問い、判断材料、失敗、制約、更新条件へ圧縮する。",
+        "普通の要約ではなく、次の判断を変える差分だけを残す。",
+        "検証できないものは検証済みと言わない。",
+    ]
+    if review["score_signals"]["human_scores"] == 0:
+        principles.append("人間採点が無いので、現段階は検証前の仮説として扱う。")
+    return {
+        "loop": review["loop"],
+        "kept": {
+            "source_reading": review["source_reading"],
+            "top_moves": review["top_moves"][:8],
+            "top_terms": review["top_terms"][:10],
+            "principles": principles,
+            "human_scored_items": review["score_signals"]["human_scores"],
+        },
+        "token_policy": "compressed source-review output; not raw chat history",
     }
-    rules = list(rules_by_axis[axis])
-    if summary["score_signals"]["human_scores"] == 0:
-        rules.append("人間採点が無い時は、検証済みとは言わない。")
-    if loop_index >= 6:
-        rules.append("前ループまでの規則を統合し、重複する言い換えを削る。")
-    return rules
 
 
-def _merge_distilled_profile(
+def _derive_next_view(review: dict[str, Any], compressed: dict[str, Any]) -> str:
+    seed_index = min(review["loop"], len(SOURCE_REVIEW_SEED_VIEWS) - 1)
+    move_names = [item["name"] for item in review.get("top_moves", [])[:4]]
+    term_names = [item["term"] for item in review.get("top_terms", [])[:6]]
+    return (
+        f"{SOURCE_REVIEW_SEED_VIEWS[seed_index]} "
+        f"前回保持: {', '.join(move_names) or 'none'}。"
+        f"注目語: {', '.join(term_names) or 'none'}。"
+        "次は、根拠、範囲、例外、未検証点を分けて読む。"
+    )
+
+
+def _merge_source_review_profile(
     profile: dict[str, Any],
-    summary: dict[str, Any],
-    rules: list[str],
+    compressed: dict[str, Any],
+    next_view: str,
     loop_index: int,
 ) -> dict[str, Any]:
     next_profile = json.loads(json.dumps(profile, ensure_ascii=False))
@@ -590,32 +660,31 @@ def _merge_distilled_profile(
     history.append(
         {
             "loop": loop_index,
-            "axis": summary["axis"],
-            "label": summary["label"],
-            "question": summary["question"],
-            "rules_added": rules,
+            "view": next_view,
+            "kept": compressed["kept"],
         }
     )
-    distilled_rules: list[str] = []
-    for rule in list(next_profile.get("distilled_rules", [])) + rules:
-        if rule not in distilled_rules:
-            distilled_rules.append(rule)
+    principles: list[str] = []
+    for item in history:
+        kept = item.get("kept", {})
+        for principle in kept.get("principles", []):
+            if principle not in principles:
+                principles.append(principle)
     next_profile["distillation"] = {
         "loop_count": loop_index,
-        "method": "compressed-profile review loop",
+        "method": "source bundle review/compress/next_view loop",
         "raw_history_sent_to_model": False,
-        "human_scored_items": summary["score_signals"]["human_scores"],
-        "weak_result": summary["score_signals"]["human_scores"] == 0,
+        "human_scored_items": compressed["kept"].get("human_scored_items", 0),
+        "weak_result": "人間採点が無いので、現段階は検証前の仮説として扱う。"
+        in principles,
     }
-    next_profile["distilled_rules"] = distilled_rules[-28:]
-    next_profile["compressed_rules"] = distilled_rules[-12:]
-    next_profile["distillation_history"] = history
-    next_profile["current_view"] = {
+    next_profile["distilled_source_view"] = {
         "loop": loop_index,
-        "axis": summary["axis"],
-        "question": summary["question"],
-        "bot_should_notice": rules[:4],
+        "next_view": next_view,
+        "kept": compressed["kept"],
     }
+    next_profile["compressed_rules"] = principles[-8:]
+    next_profile["distillation_history"] = history[-10:]
     return _redact_json(next_profile)
 
 
@@ -635,69 +704,69 @@ def _markdown_list(items: list[Any]) -> str:
 def _write_loop_files(
     loops_dir: Path,
     loop_index: int,
-    summary: dict[str, Any],
+    review: dict[str, Any],
+    compressed: dict[str, Any],
+    next_view: str,
     profile: dict[str, Any],
-    rules: list[str],
 ) -> None:
     prefix = f"loop_{loop_index:02d}"
     review = [
         f"# Loop {loop_index:02d} Review",
         "",
-        f"- axis: {summary['axis']}",
-        f"- label: {summary['label']}",
-        f"- question: {summary['question']}",
-        f"- source_user_messages: {summary.get('counts', {}).get('user_messages', 0)}",
-        f"- human_scored_items: {summary['score_signals']['human_scores']}",
+        f"- previous_view: {review['previous_view']}",
+        f"- source_records: {review['source_summary']['source_records']}",
+        f"- selected_source_count: {review['selected_source_count']}",
+        f"- human_scored_items: {review['score_signals']['human_scores']}",
         "",
         "## Source Signals",
-        _markdown_list([summary["axis_counts"]]),
-        "## What This Loop Changes",
-        _markdown_list(rules),
+        _markdown_list(review["top_moves"]),
+        "## Source Reading",
+        _markdown_list(review["source_reading"]),
+        "## Compressed Evidence",
+        _markdown_list(review["compressed_evidence"]),
         "## Weak Result",
-        "- human scoring is not available yet; this loop is profile-derived, not validated by master scores.\n"
-        if summary["score_signals"]["human_scores"] == 0
+        "- human scoring is not available yet; this loop is source-derived, not validated by master scores.\n"
+        if review["score_signals"]["human_scores"] == 0
         else "- human scoring exists but still needs manual interpretation.\n",
     ]
-    compressed = [
+    compressed_lines = [
         f"# Loop {loop_index:02d} Compressed Profile",
         "",
-        "## Distilled Rules",
-        _markdown_list(profile.get("distilled_rules", [])),
-        "## Current View",
+        "## Kept",
         "```json",
-        json.dumps(profile.get("current_view", {}), ensure_ascii=False, indent=2, sort_keys=True),
+        json.dumps(compressed["kept"], ensure_ascii=False, indent=2, sort_keys=True),
         "```",
     ]
-    next_view = [
+    next_view_lines = [
         f"# Loop {loop_index:02d} Next View",
         "",
-        f"- next_axis: {summary['axis']}",
-        f"- next_question: {summary['question']}",
+        f"- next_view: {next_view}",
         "- use_for_bot: yes",
         "",
-        "## Bot Rules For Next Loop",
-        _markdown_list(profile.get("compressed_rules", [])),
-        "## Next Questions",
+        "## Read Next By Asking",
         _markdown_list(
             [
-                "この返答は短く具体的か",
-                "普通の言葉で思想と手順を分けているか",
-                "弱い点、未検証、次の打ち手を出しているか",
-                "生ログを暗唱していないか",
+                "この資料束は何の判断を変えるか",
+                "どの条件、例外、失敗が落ちているか",
+                "普通の知識との差分は何か",
+                "どこから先は未検証か",
             ]
         ),
     ]
     (loops_dir / f"{prefix}_review.md").write_text("\n".join(review), encoding="utf-8")
     (loops_dir / f"{prefix}_compressed.md").write_text(
-        "\n".join(compressed), encoding="utf-8"
+        "\n".join(compressed_lines), encoding="utf-8"
     )
-    (loops_dir / f"{prefix}_next_view.md").write_text("\n".join(next_view), encoding="utf-8")
+    (loops_dir / f"{prefix}_next_view.md").write_text(
+        "\n".join(next_view_lines), encoding="utf-8"
+    )
 
 
 def distill_masterbot(
     profile_path: str | Path,
     out_dir: str | Path,
     *,
+    source_bundle_path: str | Path | None = None,
     scores_path: str | Path | None = None,
     loops: int = 10,
     update_profile: bool = True,
@@ -707,14 +776,35 @@ def distill_masterbot(
     loops_dir = out / "loops"
     loops_dir.mkdir(parents=True, exist_ok=True)
     profile = json.loads(profile_source.read_text(encoding="utf-8"))
+    source_bundle = (
+        Path(source_bundle_path)
+        if source_bundle_path is not None
+        else profile_source.parent / "source_bundle.jsonl"
+    )
+    records = load_jsonl(source_bundle)
+    if not records:
+        records = [
+            {
+                "source_id": "profile_fallback",
+                "title_hint": "profile fallback",
+                "user_turns": profile.get("counts", {}).get("user_messages", 0),
+                "moves": profile.get("voice", {}).get("marker_counts", []),
+                "terms": profile.get("interest_terms", []),
+                "compressed_evidence": [
+                    "source_bundle.jsonl missing; using compressed profile only"
+                ],
+            }
+        ]
     scores = load_jsonl(scores_path) if scores_path else []
     real_scores = _real_master_scores(scores)
-    total_loops = min(loops, len(DISTILLATION_AXES))
-    for loop_index, axis in enumerate(DISTILLATION_AXES[:total_loops], start=1):
-        summary = _loop_source_summary(profile, scores, axis)
-        rules = _derive_loop_rules(summary, loop_index)
-        profile = _merge_distilled_profile(profile, summary, rules, loop_index)
-        _write_loop_files(loops_dir, loop_index, summary, profile, rules)
+    total_loops = min(loops, len(SOURCE_REVIEW_SEED_VIEWS))
+    next_view = SOURCE_REVIEW_SEED_VIEWS[0]
+    for loop_index in range(1, total_loops + 1):
+        review = _review_source_bundle(records, next_view, loop_index, scores)
+        compressed = _compress_review(review)
+        next_view = _derive_next_view(review, compressed)
+        profile = _merge_source_review_profile(profile, compressed, next_view, loop_index)
+        _write_loop_files(loops_dir, loop_index, review, compressed, next_view, profile)
 
     final_profile = out / "profile_distilled.json"
     final_profile.write_text(
@@ -730,6 +820,8 @@ def distill_masterbot(
         "created_at": datetime.now(UTC).isoformat(),
         "loops": total_loops,
         "profile_path": str(profile_source),
+        "source_bundle_path": str(source_bundle),
+        "source_records": len(records),
         "final_profile_path": str(final_profile),
         "updated_profile": update_profile,
         "raw_logs_committed": False,
@@ -746,6 +838,8 @@ def distill_masterbot(
         "# Masterbot 10-loop Distillation",
         "",
         f"- loops: {total_loops}",
+        f"- source_bundle: {source_bundle}",
+        f"- source_records: {len(records)}",
         f"- final_profile: {final_profile}",
         f"- updated_profile: {update_profile}",
         f"- human_scored_items: {len(real_scores)}",
@@ -761,7 +855,7 @@ def distill_masterbot(
         "- distillation_audit.json",
         "",
         "## Weak Result",
-        "- This run uses compressed profile signals and saved human scores only.",
+        "- This run reads the compressed source bundle, then writes review/compressed/next_view.",
         "- If human scores are absent or only smoke data, the loop is not a full behavioral validation.",
     ]
     (out / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
@@ -774,7 +868,7 @@ def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
         return []
     return [
         json.loads(line)
-        for line in source.read_text(encoding="utf-8").splitlines()
+        for line in source.read_text(encoding="utf-8").split("\n")
         if line.strip()
     ]
 
