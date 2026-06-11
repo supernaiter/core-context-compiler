@@ -68,3 +68,4 @@
 2026-06-10T19:05:42+0900 | Create Issue #72 and remove voice/question-pattern prompt path because the target is knowledge distillation, not persona imitation.
 2026-06-11T13:59:25+0900 | Create Issue #73 and run the masterbot knowledge evolution as actual Codex subagent reading loops, not the fixed-rule masterbot distill path.
 2026-06-11T16:23:10+0900 | Create Issue #74 and redo masterbot distillation from raw ChatGPT JSON for Master knowledge/interests/beliefs instead of answer-routing rules.
+2026-06-11T16:52:28+0900 | Create and implement Issue #75 so masterbot serve reads knowledge_distillation_v2 profile fields; keep v1 prompt compatibility and redact local source paths before model prompt.

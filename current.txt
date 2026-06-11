@@ -17,6 +17,7 @@ updated: 2026-06-11T13:44:24+09:00
 updated: 2026-06-11T13:49:04+09:00
 updated: 2026-06-11T13:53:56+09:00
 updated: 2026-06-11T13:56:05+09:00
+updated: 2026-06-11T16:52:28+0900
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -42,6 +43,12 @@ status:
 - latest: Issue #73 loop_09 integrator正本4ファイル作成
 - latest: Issue #73 loop_10 integrator正本4ファイル作成
 - latest: Issue #73 final_view.md と profile_distilled_codex.json 作成
+- latest: Issue #75 masterbot UI now loads knowledge_distillation_v2 profile
+- latest: masterbot URL http://127.0.0.1:8765
+- latest: masterbot profile reports/master_chatbot/knowledge_distillation_v2/profile_distilled_knowledge_v2.json
+- latest: masterbot pid 38233
+- latest: masterbot model gateway 127.0.0.1:8045 not listening
+- latest: Issue #75 verification ruff passed; pytest tests/unit/test_masterbot.py 12 passed; v2 prompt smoke passed; UI health passed; chat smoke blocked by 8045
 done:
 - plan accepted
 - GitHub repo created

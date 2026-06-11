@@ -31,6 +31,7 @@ ADDRESS_PATTERN = re.compile(
     r"(?:北海道|東京都|京都府|大阪府|.{2,3}県).{0,24}?(?:市|区|町|村).{0,24}?"
     r"(?:丁目|番地|番|号)"
 )
+LOCAL_PATH_PATTERN = re.compile(r"/(?:Users|Volumes)/[^\s\"'<>)]*")
 
 STYLE_MARKERS = {
     "direct_command": ["やれ", "して", "作れ", "進め", "止めて", "見せて", "調べ", "実装"],
@@ -108,6 +109,7 @@ def redact_sensitive(text: str) -> str:
     for pattern in SECRET_PATTERNS:
         redacted = pattern.sub("[REDACTED]", redacted)
     redacted = ADDRESS_PATTERN.sub("[REDACTED_ADDRESS]", redacted)
+    redacted = LOCAL_PATH_PATTERN.sub("[REDACTED_PATH]", redacted)
     return redacted
 
 
@@ -871,6 +873,38 @@ def load_jsonl(path: str | Path) -> list[dict[str, Any]]:
     ]
 
 
+def _prompt_profile_context(profile: dict[str, Any]) -> dict[str, Any]:
+    allowed: dict[str, Any] = {
+        "distillation": profile.get("distillation"),
+        "distilled_source_view": profile.get("distilled_source_view"),
+        "recurring_questions": profile.get("recurring_questions"),
+        "judgment_habits": profile.get("judgment_habits"),
+        "work_rules": profile.get("work_rules"),
+        "interest_terms": profile.get("interest_terms"),
+    }
+    v2_keys = [
+        "method",
+        "loop_count",
+        "raw_json_primary",
+        "source_bundle_used",
+        "raw_logs_committed",
+        "summary",
+        "knowledge_domains",
+        "interests",
+        "beliefs",
+        "evaluation_axes",
+        "worldview_patterns",
+        "domain_views",
+        "open_questions",
+        "weak_result",
+    ]
+    if any(key in profile for key in v2_keys):
+        allowed["knowledge_distillation_v2"] = {
+            key: profile.get(key) for key in v2_keys if key in profile
+        }
+    return {key: value for key, value in allowed.items() if value is not None}
+
+
 def build_prompt(profile: dict[str, Any], mode: str, user_message: str) -> list[dict[str, str]]:
     system_parts = [
         "あなたは検証用チャットbotです。",
@@ -878,16 +912,13 @@ def build_prompt(profile: dict[str, Any], mode: str, user_message: str) -> list[
         "根拠、範囲、未検証点を分けて返す。",
     ]
     if mode in {"profile", "profile+rules"}:
-        allowed = {
-            "distillation": profile.get("distillation"),
-            "distilled_source_view": profile.get("distilled_source_view"),
-            "recurring_questions": profile.get("recurring_questions"),
-            "judgment_habits": profile.get("judgment_habits"),
-            "work_rules": profile.get("work_rules"),
-            "interest_terms": profile.get("interest_terms"),
-        }
-        system_parts.append("蒸留済みsource view:")
-        system_parts.append(json.dumps(_redact_json(allowed), ensure_ascii=False, sort_keys=True))
+        system_parts.append(
+            "profile利用時は、口調再現よりも知識、興味、信念、評価軸、未検証点を優先する。"
+        )
+        system_parts.append("蒸留済みprofile:")
+        system_parts.append(
+            json.dumps(_redact_json(_prompt_profile_context(profile)), ensure_ascii=False, sort_keys=True)
+        )
     if mode == "profile+rules":
         system_parts.append("圧縮ルール:")
         system_parts.append(

@@ -140,13 +140,17 @@ def test_load_split_conversations_accepts_project_root_with_sorted_chats(tmp_pat
 
 
 def test_redaction_patterns() -> None:
-    text = "mail a@example.com phone 090-1234-5678 token ghp_abcdefghijklmnop123456"
+    text = (
+        "mail a@example.com phone 090-1234-5678 "
+        "token ghp_abcdefghijklmnop123456 path /Volumes/private/raw.json"
+    )
 
     redacted = redact_sensitive(text)
 
     assert "a@example.com" not in redacted
     assert "090-1234-5678" not in redacted
     assert "ghp_abcdefghijklmnop123456" not in redacted
+    assert "/Volumes/private/raw.json" not in redacted
 
 
 def test_prompt_uses_distilled_source_view_not_voice_profile() -> None:
@@ -172,6 +176,38 @@ def test_prompt_uses_distilled_source_view_not_voice_profile() -> None:
     assert '"voice"' not in prompt_text
     assert "question_patterns" not in prompt_text
     assert "sk-secret999999999999999999" not in prompt_text
+
+
+def test_prompt_includes_knowledge_distillation_v2_profile() -> None:
+    profile = {
+        "method": "raw-json-codex-reading-loop",
+        "loop_count": 10,
+        "raw_json_primary": True,
+        "source_bundle_used": False,
+        "raw_logs_committed": False,
+        "summary": "知識・興味・信念・評価軸を抽出したprofile",
+        "knowledge_domains": [{"name": "silent speech interfaces", "source_hints": ["loop_01"]}],
+        "interests": [{"name": "F1", "strength": "medium"}],
+        "beliefs": [{"claim": "大量資料から構造を作るべき", "strength": "high"}],
+        "evaluation_axes": [{"axis": "測れること", "why": "改善判定に必要"}],
+        "worldview_patterns": [{"pattern": "判断とモデルを分ける"}],
+        "domain_views": [{"domain": "金属加工", "view": "失敗症状と条件を重視"}],
+        "open_questions": [{"question": "蒸留性能をどう測るか"}],
+        "weak_result": ["人間採点は未実施"],
+    }
+
+    messages = build_prompt(profile, "profile", "SSIについて")
+    prompt_text = json.dumps(messages, ensure_ascii=False)
+
+    assert "knowledge_distillation_v2" in prompt_text
+    assert "knowledge_domains" in prompt_text
+    assert "beliefs" in prompt_text
+    assert "evaluation_axes" in prompt_text
+    assert "domain_views" in prompt_text
+    assert "open_questions" in prompt_text
+    assert "raw_json_primary" in prompt_text
+    assert "source_bundle_used" in prompt_text
+    assert "口調再現よりも知識" in prompt_text
 
 
 def test_auto_score_detects_hidden_answer_leak() -> None:
