@@ -29,3 +29,4 @@
 2026-06-10T19:01:25+09:00 | Do not recast a requested distillation process into persona/style axes; preserve the source-review/compress/next-view process unless the user explicitly asks for customization.
 2026-06-10T19:05:42+09:00 | For chat-history distillation, the chatbot is only an evaluation shell; the context must be distilled source knowledge, not voice or phrasing imitation.
 2026-06-11T13:59:25+0900 | For personal chat distillation, keep the generated final view as route/proof/evaluation control; topic interests and persona/style imitation must be explicit removals, not outputs.
+2026-06-11T16:23:10+0900 | Do not treat personal chat distillation as assistant response routing; the primary object is the user's knowledge, interests, beliefs, evaluation axes, worldview, and open questions.

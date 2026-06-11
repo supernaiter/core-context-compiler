@@ -1081,3 +1081,28 @@ updated: 2026-06-11T13:59:25+0900
   - verification: file_sets/pass previous_view_refs/pass forbidden_axis/pass secret_scan/pass
   - weak: compressed_source_bundle_only; no_human_holdout_score; no_primary_source_or_runtime_verification
   - github_issue: #73
+updated: 2026-06-11T16:23:10+0900
+- issue: #74
+- knowledge_distillation_v2:
+  - status: done
+  - failed_prior_issue: #73
+  - raw_json_primary: true
+  - source_bundle_used: false
+  - raw_json_files: 1980
+  - parsed_conversations: 1980
+  - output_dir: reports/master_chatbot/knowledge_distillation_v2
+  - loops_completed: 10
+  - loop_files: review/compressed/next_view/audit x10
+  - chunk_reviews: 30
+  - final_view: reports/master_chatbot/knowledge_distillation_v2/final_view.md
+  - knowledge_map: reports/master_chatbot/knowledge_distillation_v2/master_knowledge_map.md
+  - interests: reports/master_chatbot/knowledge_distillation_v2/master_interests.md
+  - beliefs: reports/master_chatbot/knowledge_distillation_v2/master_beliefs.md
+  - evaluation_axes: reports/master_chatbot/knowledge_distillation_v2/master_evaluation_axes.md
+  - domain_views: reports/master_chatbot/knowledge_distillation_v2/master_domain_views.md
+  - open_questions: reports/master_chatbot/knowledge_distillation_v2/master_open_questions.md
+  - profile: reports/master_chatbot/knowledge_distillation_v2/profile_distilled_knowledge_v2.json
+  - audit: reports/master_chatbot/knowledge_distillation_v2/audit.json
+  - verification: file_sets/pass final_artifacts/pass main_object/pass secret_scan/pass profile_json/pass
+  - weak: clipped_redacted_raw_derived_chunks; codex_synthesis_labels; no_human_holdout_score; no_external_primary_verification
+  - github_issue: #74
