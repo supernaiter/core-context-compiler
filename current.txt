@@ -1,14 +1,47 @@
 project: core-context-compiler
-updated: 2026-06-07T08:38:00+09:00
+updated: 2026-06-09T15:55:09+09:00
+updated: 2026-06-09T20:57:56+09:00
+updated: 2026-06-10T11:05:00+09:00
+updated: 2026-06-10T13:53:29+09:00
+updated: 2026-06-10T18:51:39+09:00
+updated: 2026-06-10T19:01:25+09:00
+updated: 2026-06-10T19:05:42+09:00
+updated: 2026-06-11T13:00:14+09:00
+updated: 2026-06-11T13:19:29+09:00
+updated: 2026-06-11T13:23:39+09:00
+updated: 2026-06-11T13:28:13+09:00
+updated: 2026-06-11T13:32:24+09:00
+updated: 2026-06-11T13:36:21+09:00
+updated: 2026-06-11T13:40:16+09:00
+updated: 2026-06-11T13:44:24+09:00
+updated: 2026-06-11T13:49:04+09:00
+updated: 2026-06-11T13:53:56+09:00
+updated: 2026-06-11T13:56:05+09:00
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
 - github: supernaiter/core-context-compiler
 status:
-- phase: v1-release-gate
-- tickets: GitHub Issues #23-#31
-- mode: eval-first
-- mvp: Typed + Pointer + Temporal + Salience + DSL + Eval
+- phase: IN_PROGRESS
+- tickets: no open GitHub Issues
+- mode: no_work_triage
+- mvp: Policy v2 North Star gate complete
+- latest: Consult Pro suggests F1 Barcelona-Catalunya 2026 as first cross-domain intelligence evaluation
+- latest: Issue #69 personal chat history bot implemented and smoke-tested locally
+- latest: Issue #70 personal chat history bot 10-loop distillation implemented and run
+- latest: Issue #71 removed persona-axis loop and reran source-bundle review distillation
+- latest: Issue #72 removed voice/question-pattern prompt path from masterbot knowledge distillation
+- latest: Issue #73 loop_01_chunk_06 review written from 100 chunk records
+- latest: Issue #73 loop_02 integrator正本4ファイル作成
+- latest: Issue #73 loop_03 integrator正本4ファイル作成
+- latest: Issue #73 loop_04 integrator正本4ファイル作成
+- latest: Issue #73 loop_05 integrator正本4ファイル作成
+- latest: Issue #73 loop_06 integrator正本4ファイル作成
+- latest: Issue #73 loop_07 integrator正本4ファイル作成
+- latest: Issue #73 loop_08 integrator正本4ファイル作成
+- latest: Issue #73 loop_09 integrator正本4ファイル作成
+- latest: Issue #73 loop_10 integrator正本4ファイル作成
+- latest: Issue #73 final_view.md と profile_distilled_codex.json 作成
 done:
 - plan accepted
 - GitHub repo created
@@ -156,6 +189,23 @@ done:
   - absolute token inversion still fails on synthetic_v2
   - LongMemEval-S and MemoryAgentBench remain adapter-only
   - exact source spans unavailable for some public subsets
+- paper_compression:
+  - stripper_cli: rules_only
+  - codex_api_calls: removed
+  - verification: tests/unit/test_paper_compression.py passed; ruff passed
+  - paper_sample_2308_06533: kept_body and delete_notes written
+- r2c_vs_llmlingua_trial:
+  - source: reports/codex_paper_sample_2308_06533/codex_kept_body.md
+  - report: reports/r2c_vs_llmlingua_trial/summary.md
+  - source_tokens_gpt4o_mini: 3521
+  - llmlingua2_rate_0_5_tokens: 1724
+  - llmlingua2_rate_0_3_tokens: 994
+  - r2c_json_two_stage_tokens: 280
+  - r2c_direct_tokens: 1135
+  - r2c_lossless_final_tokens: 3659
+  - decision: do_not_replace_llmlingua2_for_paper_body_compression
+  - github_issue: #62
+  - github_comment: https://github.com/supernaiter/core-context-compiler/issues/62#issuecomment-4655657877
 - git_pilot_init:
   - AGENTS.md added
   - codex-ready issue template added
@@ -176,6 +226,16 @@ done:
 - GitHub release: v1.0.0
 - GitHub CI run 26921664591 success
 - GitHub Issues #23-#31 closed
+- issue: #67
+- ssi_all_context_framework:
+  - source: reports/ssi_all_context_framework/ssi-review.json
+  - source_papers: 105
+  - source_tokens: 256916
+  - compressed_bundle: reports/ssi_all_context_framework/all_compressed_codex.md
+  - compressed_tokens: 24227
+  - compressed_ratio: 0.0943
+  - subagent_effort: xhigh
+  - framework_worker: running
 - public_locomo_mini dataset added
 - public_locomo_mini eval questions: 30
 - real LoCoMo mini run passed
@@ -188,6 +248,41 @@ done:
 - folded_context_mean_EJS: 3.075
 - bare_llm_mean_EJS: 2.075
 - rag_raw_sources_mean_EJS: 2.725
+- issue: #69
+- masterbot:
+  - commit: 6eef544
+  - github_issue: #69
+  - issue_status: closed
+  - commands: corectx masterbot build; corectx masterbot serve
+  - source: raw sorted_chats Active_Check+Archive
+  - report_dir: reports/master_chatbot
+  - train_conversations: 1802
+  - holdout_conversations: 178
+  - holdout_items: 100
+  - ui: http://127.0.0.1:8765
+  - verification: test_masterbot passed; targeted ruff passed; build smoke passed; browser smoke passed
+  - weak: local uv console script required PYTHONPATH=src in this workspace
+- issue: #70
+- masterbot_10_loop_distillation:
+  - command: corectx masterbot distill
+  - report_dir: reports/master_chatbot/distillation
+  - loops: 10
+  - loop_files: 30
+  - source_bundle: reports/master_chatbot/source_bundle.jsonl
+  - source_records: 600
+  - final_profile: reports/master_chatbot/distillation/profile_distilled.json
+  - profile_updated: reports/master_chatbot/profile.json
+  - human_scored_items: 0
+  - ignored_score_items: 1
+  - verification: test_masterbot passed 11 tests; targeted ruff passed; build+source-bundle+distill smoke passed; no persona-axis terms in loop files
+  - weak: current 10-loop output is source-bundle-derived and not yet validated by real master scoring
+- issue: #72
+- masterbot_knowledge_prompt:
+  - removed_from_model_prompt: voice; question_patterns
+  - model_prompt_uses: distilled_source_view; distillation; recurring_questions; judgment_habits; work_rules
+  - rebuilt_profile_has_voice: false
+  - rebuilt_profile_has_question_patterns: false
+  - verification: test_masterbot passed 11 tests; targeted ruff passed; build+distill smoke passed; prompt smoke passed; API smoke passed
 - folded_win_rate_vs_bare: 1.0
 - folded_win_rate_vs_rag: 1.0
 - folded_bad_mistake_rate: 0.0
@@ -201,6 +296,21 @@ done:
   - folded_delta_vs_rag: 1.650
   - folded_win_rate_vs_rag: 1.000
   - folded_bad_mistake_rate: 0.000
+- issue: #65
+- paper_compression_token_shortening:
+  - skill_repo: skills/paper-compression-codex
+  - skill_installed: /Users/naoki/.codex/skills/paper-compression-codex
+  - commit: 6a08ae08a59f596413eea63343c5ddd127f91d2b
+  - github_issue: #65
+  - github_comment: https://github.com/supernaiter/core-context-compiler/issues/65#issuecomment-4656668267
+  - issue_status: closed
+  - count_tokens_text_input: implemented
+  - sottovoce_before_tokens: 747
+  - sottovoce_after_tokens: 727
+  - sottovoce_working_source_tokens: 3868
+  - sottovoce_after_ratio: 0.1880
+  - audit: reports/sottovoce_pipeline_trial/token_shortening_audit.md
+  - subagent_audit: pass
   - all_targets_pass: true
 - verification: uv run python scripts/run_domain_judgment_benchmark.py --domain autonomous_domain_evolver --out reports/domain_judgment_poc passed
 - verification: uv run pytest passed 27 tests
@@ -783,4 +893,191 @@ done:
 next:
 - ready_issues_created:
 - next_ready_issue: none
-- hourly_autopilot: no_open_issue
+- hourly_autopilot: PAUSED_NO_OPEN_ISSUE
+- issue: #62
+- paper_compression_flow:
+  - status: implemented
+  - owner: subagent_codex_5_4_mini_for_codex_only_review
+  - module: src/corectx/paper_compression.py
+  - cli: corectx paper-compress
+  - cli_stripper: rules_only
+  - codex_model_usage: outside_cli_subagent_work_only
+  - api_model_usage: forbidden
+  - test: tests/unit/test_paper_compression.py
+  - removes:
+    - headers
+    - metadata
+    - tags
+    - title_authors
+    - abstract
+    - introduction
+    - related_work
+    - discussion
+    - conclusion
+    - references
+  - compressor:
+    - noop_fallback
+    - llmlingua2_adapter
+  - verification: PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 .venv/bin/python -m pytest tests/unit/test_paper_compression.py -q passed 8 tests
+  - verification: python3 -m py_compile target paper compression files passed
+  - verification: ruff rerun incomplete; local ruff process hung and was killed
+next:
+  - issue_62: commit_and_writeback_if_requested
+- updated: 2026-06-08T08:59:00+09:00
+- goal: paper retrieval smoke on 10 arXiv SSI/speech papers
+- status:
+  - phase: DONE
+  - paper_count: 10
+  - source_ok: 10
+  - html_ok: 10
+  - pdf_ok: 1
+  - chosen_source: html=9,pdf=1
+  - report: reports/paper_retrieval_smoke
+- updated: 2026-06-09T12:48:20+09:00
+- issue: #63
+- goal: codex paper compression skill with 20_percent_token_gate
+- status:
+  - phase: DONE
+  - skill_path: /Users/naoki/.codex/skills/paper-compression-codex
+  - repo_skill_path: skills/paper-compression-codex
+  - script: /Users/naoki/.codex/skills/paper-compression-codex/scripts/count_tokens.py
+  - commit: e9888eb
+  - pushed: true
+  - github_issue_state: closed
+  - github_comment: https://github.com/supernaiter/core-context-compiler/issues/63#issuecomment-4655922516
+  - validation: skill_creator_quick_validate_passed
+  - source: reports/codex_paper_sample_2308_06533/codex_kept_body.md
+  - output: reports/paper_compression_codex_skill_trial/subagent_mini/compressed.md
+  - audit: reports/paper_compression_codex_skill_trial/verified_audit.md
+  - source_tokens_gpt4o_mini: 3521
+  - target_tokens_floor_20_percent: 704
+  - output_tokens_gpt4o_mini: 703
+  - token_ratio: 0.1997
+  - required_items: 18/18
+  - important_items: 20/20
+  - important_item_retention: 1.000
+  - important_numbers_and_names: 100_percent
+  - serious_judgment_differences: 0
+  - result: pass
+  - weak_result: subagent_first_audit_was_checked_and_corrected_for_omitted_hardware_details
+- updated: 2026-06-09T14:57:18+09:00
+- issue: #64
+- goal: test paper compression pipeline on SottoVoce
+- status:
+  - phase: DONE
+  - paper: SottoVoce
+  - arxiv_id: 2303.01758
+  - doi: 10.1145/3290605.3300376
+  - source_url: https://arxiv.org/abs/2303.01758
+  - pdf_url: https://arxiv.org/pdf/2303.01758
+  - html_source: https://ar5iv.labs.arxiv.org/html/2303.01758
+  - raw_html_text: reports/sottovoce_pipeline_trial/body_raw.txt
+  - raw_pdf_text: reports/sottovoce_pipeline_trial/paper_raw.txt
+  - working_source: reports/sottovoce_pipeline_trial/working_source.md
+  - compressed_output: reports/sottovoce_pipeline_trial/subagent_mini/compressed.md
+  - audit: reports/sottovoce_pipeline_trial/verified_audit.md
+  - stripped_sections: title_authors_abstract_introduction_related_work_references_formal_metadata
+  - kept_sections: system_architecture_results_end_to_end_evaluation_discussion_conclusion
+  - raw_html_tokens_gpt4o_mini: 13006
+  - working_source_tokens_gpt4o_mini: 3868
+  - target_tokens_floor_20_percent: 773
+  - output_tokens_gpt4o_mini: 747
+  - token_ratio: 0.1931
+  - required_items: 10/10
+  - important_items: 3/3
+  - important_item_retention: 1.000
+  - important_numbers_and_names: 100_percent
+  - serious_judgment_differences: 0
+  - result: pass
+  - weak_result: initial_subagent_audit_undercounted_tokens_1130_measured_then_rewritten_to_747
+  - github_issue_state: closed
+  - github_comment: https://github.com/supernaiter/core-context-compiler/issues/64#issuecomment-4656580666
+- updated: 2026-06-09T15:55:09+09:00
+- issue: #66
+- goal: add generic document compression Codex skill
+- status:
+  - phase: DONE
+  - skill_path: /Users/naoki/.codex/skills/document-compression-codex
+  - repo_skill_path: skills/document-compression-codex
+  - script: /Users/naoki/.codex/skills/document-compression-codex/scripts/count_tokens.py
+  - commit: a63b73c
+  - pushed: true
+  - github_issue_state: closed
+  - github_comment: https://github.com/supernaiter/core-context-compiler/issues/66#issuecomment-4657036271
+  - source_types: web/book/manual/case_note/lecture_material/paper
+  - default_gate: working_source_tokens_lte_20_percent
+  - output_shape: fixed_document_compression_fields
+  - audit_shape: fixed_document_compression_audit_fields
+  - verification: skill_creator_quick_validate_passed
+  - verification: repo_vs_installed_diff_empty
+  - verification: py_compile_count_tokens_passed
+  - verification: paper_compression_skill_unchanged
+  - sottovoce_source: reports/sottovoce_pipeline_trial/working_source.md
+  - sottovoce_output: reports/document_compression_skill_trial/sottovoce_generic_compressed.md
+  - sottovoce_audit: reports/document_compression_skill_trial/sottovoce_audit.md
+  - sottovoce_tokens: 3868_to_722
+  - sottovoce_ratio: 0.1867
+  - bta_source: reports/document_compression_skill_trial/bta_deep_hole_source.md
+  - bta_output: reports/document_compression_skill_trial/bta_deep_hole_compressed.md
+  - bta_audit: reports/document_compression_skill_trial/bta_deep_hole_audit.md
+  - bta_tokens: 1600_to_320
+  - bta_ratio: 0.2000
+  - subagent_audits: pass
+  - weak_result: BTA first audits failed until concrete symptom traps were restored
+- updated: 2026-06-09T21:01:43+09:00
+- ssi_all_context_framework:
+  - input: reports/ssi_all_context_framework/all_compressed_codex.md
+  - input_tokens: 24227
+  - paper_count: 105
+  - output: reports/ssi_all_context_framework/framework_from_all_compressed.md
+  - audit: reports/ssi_all_context_framework/framework_audit.md
+  - output_tokens: 4930
+  - status: done
+
+- issue: #68
+- ssi_10_loop_views:
+  - status: running
+  - input: reports/ssi_all_context_framework/all_compressed_codex.md
+  - output_dir: reports/ssi_10_loop_views
+  - target_loops: 10
+
+- issue: #68
+- ssi_10_loop_views:
+  - status: done
+  - output_dir: reports/ssi_10_loop_views
+  - loops: 10
+  - review_files: 10
+  - compressed_files: 10
+  - next_view_files: 10
+  - audit: reports/ssi_10_loop_views/audit.md
+  - weak: compressed loop files are not all <=20% of review tokens; input is compressed expert-review export, not full PDFs
+
+- updated: 2026-06-11T12:56:59+09:00
+- issue: #73
+- master_chatbot_codex_distillation:
+  - status: chunk_review_done
+  - loop: 01
+  - chunk: 01
+  - source: reports/master_chatbot/codex_distillation/source_chunks/chunk_01.jsonl
+  - seed_view: reports/master_chatbot/codex_distillation/seed_view.md
+  - output: reports/master_chatbot/codex_distillation/chunk_reviews/loop_01_chunk_01.md
+  - records_read: 100
+  - raw_logs_used: false
+  - fixed_rule_distill_used: false
+  - weak_result: compressed_evidence_empty_or_duplicate_records_limit_source_depth
+updated: 2026-06-11T13:59:25+0900
+- issue: #73
+- codex_distillation:
+  - source_bundle: reports/master_chatbot/source_bundle.jsonl
+  - output_dir: reports/master_chatbot/codex_distillation
+  - loops_completed: 10
+  - loop_files: review/compressed/next_view/audit x10
+  - chunk_reviews: 33
+  - final_view: reports/master_chatbot/codex_distillation/final_view.md
+  - profile: reports/master_chatbot/codex_distillation/profile_distilled_codex.json
+  - audit: reports/master_chatbot/codex_distillation/audit.json
+  - fixed_rule_masterbot_distill_used: false
+  - raw_logs_used: false
+  - verification: file_sets/pass previous_view_refs/pass forbidden_axis/pass secret_scan/pass
+  - weak: compressed_source_bundle_only; no_human_holdout_score; no_primary_source_or_runtime_verification
+  - github_issue: #73

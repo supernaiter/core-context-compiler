@@ -14,3 +14,18 @@
 2026-06-07T02:37:34+09:00 | Do not claim ruff verification when ruff enters STAT UE; record PID and use py_compile plus pytest as fallback evidence.
 2026-06-07T03:47:59+09:00 | If targeted pytest hangs after a prior pass, add a direct PYTHONPATH smoke assertion for the changed behavior and record the pytest rerun as incomplete.
 2026-06-07T04:49:04+09:00 | If uv run ruff hangs during package build, record it separately from direct ruff UE and keep pytest plus py_compile evidence explicit.
+2026-06-07T07:18:00+09:00 | Keep audit-only CLI imports lazy so context-audit workflows do not pay heavy evaluation imports.
+2026-06-08T00:00:00+09:00 | Paper stripping can remove known sections by headings, but cannot reliably separate introduction from body when no later section boundary exists; prefer heading-bounded deletion and keep this limitation explicit.
+2026-06-08T08:59:00+09:00 | For arXiv smoke, count source fetch success separately from source usability; latex-heavy source archives should fall through to ar5iv HTML or PDF when the existing stripper empties them.
+2026-06-09T12:08:03+09:00 | R2'c lossless final output can be larger than source text and the guard can corrupt paper terms such as KDE-SSI -> DE-SSI; do not treat "lossless" as safe without direct diff checks.
+2026-06-09T12:48:20+09:00 | Subagent compression audits can be optimistic; verify exact missing numbers/names manually before claiming a 20% paper-compression pass.
+2026-06-09T14:57:18+09:00 | Always rerun the repo token counter on subagent compression outputs; the first SottoVoce subagent audit claimed 762 tokens but the actual count was 1130 before correction.
+2026-06-09T15:09:35+09:00 | Token-shortening passes can silently drop caveats; the SottoVoce audit first lost "difference unclear", so final shortening needs a source-vs-output judgment audit.
+2026-06-09T15:55:09+09:00 | Generic document compression must preserve concrete symptom combinations; BTA audits failed until pressure/chip/pad/runout/material-inclusion traps were restored.
+2026-06-10T13:53:29+09:00 | For persona/chatbot work, cleaned chats and speakerless text exports can destroy style evidence; use raw current_node JSON paths and keep user/assistant roles explicit.
+2026-06-10T13:53:29+09:00 | In this workspace, uv console scripts may miss src on sys.path; verify CLI with PYTHONPATH=src when the editable install path is not loaded.
+2026-06-10T18:51:39+09:00 | A chatbot scaffold is not a distillation-loop validation; reproduce the same loop artifacts and explicitly mark whether the loop was human-scored or only profile-derived.
+2026-06-10T18:51:39+09:00 | When posting GitHub comments containing backticks, use --body-file with a quoted heredoc so the shell does not execute command substitutions.
+2026-06-10T19:01:25+09:00 | Do not recast a requested distillation process into persona/style axes; preserve the source-review/compress/next-view process unless the user explicitly asks for customization.
+2026-06-10T19:05:42+09:00 | For chat-history distillation, the chatbot is only an evaluation shell; the context must be distilled source knowledge, not voice or phrasing imitation.
+2026-06-11T13:59:25+0900 | For personal chat distillation, keep the generated final view as route/proof/evaluation control; topic interests and persona/style imitation must be explicit removals, not outputs.
