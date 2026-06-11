@@ -7,6 +7,8 @@ import json
 import os
 import random
 import re
+import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -19,6 +21,8 @@ from typing import Any
 CHAT_TARGET_DIRS = ("Active_Check", "Archive")
 DEFAULT_MODEL = "claude-opus-4-5-thinking"
 DEFAULT_BASE_URL = "http://127.0.0.1:8045/v1"
+DEFAULT_BACKEND = "codex-exec"
+DEFAULT_CODEX_BIN = "/Applications/Codex.app/Contents/Resources/codex"
 
 SECRET_PATTERNS = [
     re.compile(r"\bsk-[A-Za-z0-9_-]{8,}\b"),
@@ -930,6 +934,72 @@ def build_prompt(profile: dict[str, Any], mode: str, user_message: str) -> list[
     ]
 
 
+def _messages_to_codex_prompt(messages: list[dict[str, str]]) -> str:
+    lines = [
+        "次のsystemとuserだけを根拠に、チャットbotとして返答してください。",
+        "ファイル閲覧やコマンド実行は不要です。返答本文だけを書いてください。",
+        "",
+    ]
+    for message in messages:
+        role = message.get("role", "message")
+        content = redact_sensitive(message.get("content", ""))
+        lines.append(f"## {role}")
+        lines.append(content)
+        lines.append("")
+    return "\n".join(lines).strip() + "\n"
+
+
+def call_codex_exec(
+    messages: list[dict[str, str]],
+    *,
+    model: str | None = None,
+    timeout: float = 180.0,
+) -> str:
+    selected_model = model or os.environ.get("MASTERBOT_CODEX_MODEL")
+    codex_bin = os.environ.get("MASTERBOT_CODEX_BIN") or (
+        DEFAULT_CODEX_BIN if Path(DEFAULT_CODEX_BIN).exists() else "codex"
+    )
+    prompt = _messages_to_codex_prompt(messages)
+    output_path = Path(tempfile.NamedTemporaryFile(delete=False).name)
+    command = [
+        codex_bin,
+        "exec",
+        "--ephemeral",
+        "--ignore-rules",
+        "--ignore-user-config",
+        "--skip-git-repo-check",
+        "--sandbox",
+        "read-only",
+        "--output-last-message",
+        str(output_path),
+    ]
+    if selected_model:
+        command.extend(["--model", selected_model])
+    command.append("-")
+    try:
+        result = subprocess.run(
+            command,
+            input=prompt,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+        answer = output_path.read_text(encoding="utf-8").strip() if output_path.exists() else ""
+        if answer:
+            return redact_sensitive(answer)
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip().splitlines()[-1:]
+            return "不可: Codex backend失敗 " + " ".join(detail)
+        return redact_sensitive((result.stdout or "").strip()) or "不可: Codex backend応答なし"
+    except subprocess.TimeoutExpired:
+        return "不可: Codex backend timeout"
+    except OSError as exc:
+        return f"不可: Codex backend起動失敗 {exc}"
+    finally:
+        output_path.unlink(missing_ok=True)
+
+
 def call_openai_compatible(
     messages: list[dict[str, str]],
     *,
@@ -965,6 +1035,15 @@ def call_openai_compatible(
         return "不可: モデル応答形式が不明"
 
 
+def call_model(messages: list[dict[str, str]]) -> str:
+    backend = os.environ.get("MASTERBOT_BACKEND", DEFAULT_BACKEND)
+    if backend in {"codex", "codex-exec", "codex_app", "codex-app"}:
+        return call_codex_exec(messages)
+    if backend in {"openai", "openai-compatible", "8045"}:
+        return call_openai_compatible(messages)
+    return f"不可: unknown backend {backend}"
+
+
 def auto_score(candidate: str, item: dict[str, Any] | None = None) -> dict[str, Any]:
     text = candidate.strip()
     hidden = (item or {}).get("hidden_answer", "")
@@ -997,13 +1076,13 @@ class MasterbotServer:
 
     def chat(self, message: str, mode: str) -> dict[str, Any]:
         messages = build_prompt(self.profile, mode, message)
-        answer = call_openai_compatible(messages)
+        answer = call_model(messages)
         return {"answer": answer, "auto": auto_score(answer)}
 
     def eval_chat(self, item_id: str, mode: str) -> dict[str, Any]:
         item = self.by_id[item_id]
         messages = build_prompt(self.profile, mode, item["model_context"])
-        answer = call_openai_compatible(messages)
+        answer = call_model(messages)
         return {"answer": answer, "auto": auto_score(answer, item)}
 
     def eval_items(self, reveal: bool = False) -> list[dict[str, Any]]:
@@ -1065,7 +1144,7 @@ pre {{ white-space: pre-wrap; background: #f0f2f5; padding: 12px; border-radius:
 <select id="mode">
 <option value="base">base</option>
 <option value="profile">profile</option>
-<option value="profile+rules">profile+rules</option>
+<option value="profile+rules" selected>profile+rules</option>
 </select>
 <button onclick="sendChat()">送信</button>
 </div>
@@ -1105,7 +1184,7 @@ async function init() {{
 }}
 async function sendChat() {{
   const data = await api('/api/chat', {{mode: mode.value, message: message.value}});
-  answer.textContent = data.answer + '\\n\\n' + JSON.stringify(data.auto, null, 2);
+  answer.textContent = data.answer;
 }}
 function selectedItem() {{ return items.find(x => x.id === evals.value); }}
 function loadEval() {{

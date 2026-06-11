@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 
 from corectx.masterbot import (
+    _messages_to_codex_prompt,
     auto_score,
     build_masterbot,
     build_prompt,
+    call_model,
     distill_masterbot,
     load_chat_export,
     load_jsonl,
@@ -208,6 +210,36 @@ def test_prompt_includes_knowledge_distillation_v2_profile() -> None:
     assert "raw_json_primary" in prompt_text
     assert "source_bundle_used" in prompt_text
     assert "口調再現よりも知識" in prompt_text
+
+
+def test_messages_to_codex_prompt_redacts_sensitive_input() -> None:
+    prompt = _messages_to_codex_prompt(
+        [
+            {"role": "system", "content": "根拠を分ける"},
+            {"role": "user", "content": "token ghp_abcdefghijklmnop123456 を使う？"},
+        ]
+    )
+
+    assert "## system" in prompt
+    assert "根拠を分ける" in prompt
+    assert "## user" in prompt
+    assert "ghp_abcdefghijklmnop123456" not in prompt
+
+
+def test_call_model_defaults_to_codex_backend(monkeypatch) -> None:
+    called = {}
+
+    def fake_codex(messages):
+        called["messages"] = messages
+        return "codex answer"
+
+    monkeypatch.delenv("MASTERBOT_BACKEND", raising=False)
+    monkeypatch.setattr("corectx.masterbot.call_codex_exec", fake_codex)
+
+    answer = call_model([{"role": "user", "content": "hello"}])
+
+    assert answer == "codex answer"
+    assert called["messages"][0]["content"] == "hello"
 
 
 def test_auto_score_detects_hidden_answer_leak() -> None:

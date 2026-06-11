@@ -18,6 +18,7 @@ updated: 2026-06-11T13:49:04+09:00
 updated: 2026-06-11T13:53:56+09:00
 updated: 2026-06-11T13:56:05+09:00
 updated: 2026-06-11T16:52:28+0900
+updated: 2026-06-11T17:25:52+0900
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -49,6 +50,9 @@ status:
 - latest: masterbot pid 38233
 - latest: masterbot model gateway 127.0.0.1:8045 not listening
 - latest: Issue #75 verification ruff passed; pytest tests/unit/test_masterbot.py 12 passed; v2 prompt smoke passed; UI health passed; chat smoke blocked by 8045
+- latest: Issue #76 masterbot default backend changed to codex-exec
+- latest: Issue #76 chat smoke passed via Codex backend
+- latest: masterbot pid 95370
 done:
 - plan accepted
 - GitHub repo created

@@ -31,3 +31,4 @@
 2026-06-11T13:59:25+0900 | For personal chat distillation, keep the generated final view as route/proof/evaluation control; topic interests and persona/style imitation must be explicit removals, not outputs.
 2026-06-11T16:23:10+0900 | Do not treat personal chat distillation as assistant response routing; the primary object is the user's knowledge, interests, beliefs, evaluation axes, worldview, and open questions.
 2026-06-11T16:52:28+0900 | A distillation profile can exist while the chat UI still ignores it; prompt construction needs explicit v2 field coverage and a separate local-model-gateway health check.
+2026-06-11T17:25:52+0900 | Codex app-server is not OpenAI-compatible HTTP; for a local browser chat UI, codex exec is the fastest working Codex-backed generation bridge.
