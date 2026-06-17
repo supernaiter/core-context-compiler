@@ -73,6 +73,22 @@ status:
 - latest: Issue #79 final loop_05 Track B files created under reports/ssi_5loop_codex_only/loops; no model API calls run
 - latest: Issue #79 final loop_05 Track B verification passed; full 607 records / 666797 tokens; compact 607 records / 489509 tokens; compact_ratio 0.734
 - latest: Issue #79 result comment posted: https://github.com/supernaiter/core-context-compiler/issues/79#issuecomment-4730568550
+updated: 2026-06-18T06:31:58+0900
+- issue: #80
+- ssi_reading_text_split:
+  - status: done
+  - output_dir: reports/ssi_5loop_codex_only/reading
+  - final_reading_text: reports/ssi_5loop_codex_only/reading/final_reading_text.md
+  - source_codes: reports/ssi_5loop_codex_only/reading/source_codes.json
+  - reading_audit: reports/ssi_5loop_codex_only/reading/reading_audit.json
+  - reading_sample: reports/ssi_5loop_codex_only/reading/reading_sample.md
+  - source_records: 607
+  - raw_compact_tokens: 489509
+  - final_reading_tokens: 176517
+  - token_ratio: 0.3606
+  - verification: record_count/pass route_counts/pass source_codes/pass SottoVoce/pass SilentSpeller/pass no_source_trace/pass no_record_sha256/pass no_braces/pass below_250k/pass
+  - weak: no_new_semantic_review; warning_codes_keyword_derived; long_records_still_require_source_codes_for_citation
+  - github_issue: #80
 done:
 - plan accepted
 - GitHub repo created

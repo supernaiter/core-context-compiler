@@ -37,3 +37,4 @@
 2026-06-17T18:10:00+0900 | Do not use a page-level subset of SSI views as if it were the full distillation view catalog; individual paper reviews must trace back to the complete A/B/C/D view set.
 2026-06-17T22:12:00+0900 | In full-history SSI loops, adding every prior line reference to every record can increase tokens; keep shared history in the view and only record minimal continuity refs.
 2026-06-17T22:35:00+0900 | Latest-only compact loops can preserve token budget but lose semantic fields; full-history loops preserve source continuity and warnings but need shared history moved to view-level to control tokens.
+2026-06-18T06:31:58+0900 | Corpus distillation needs two separate outputs: model-reading text without JSON/trace metadata, and audit/source maps for citation; mixing them leaves large token waste even after semantic compression.
