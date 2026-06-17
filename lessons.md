@@ -34,3 +34,6 @@
 2026-06-11T17:25:52+0900 | Codex app-server is not OpenAI-compatible HTTP; for a local browser chat UI, codex exec is the fastest working Codex-backed generation bridge.
 2026-06-17T14:55:00+0900 | Domain distillation reports should preserve rankable performance tables; later route/view refinement must not erase the early comparison layer.
 2026-06-17T15:30:00+0900 | arXiv refresh can find missing relevant papers older than the top latest paper; mark query-bound, metadata-only additions clearly until full-text review and ranking are done.
+2026-06-17T18:10:00+0900 | Do not use a page-level subset of SSI views as if it were the full distillation view catalog; individual paper reviews must trace back to the complete A/B/C/D view set.
+2026-06-17T22:12:00+0900 | In full-history SSI loops, adding every prior line reference to every record can increase tokens; keep shared history in the view and only record minimal continuity refs.
+2026-06-17T22:35:00+0900 | Latest-only compact loops can preserve token budget but lose semantic fields; full-history loops preserve source continuity and warnings but need shared history moved to view-level to control tokens.

@@ -22,6 +22,7 @@ updated: 2026-06-11T17:25:52+0900
 updated: 2026-06-17T14:44:07+0900
 updated: 2026-06-17T14:55:00+0900
 updated: 2026-06-17T15:30:00+0900
+updated: 2026-06-17T18:45:00+0900
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -59,6 +60,19 @@ status:
 - latest: SSI distillation process report and view catalog written to reports/ssi_distillation_report/ssi_distillation_process_report_and_view_catalog.md
 - latest: Issue #77 added SSI performance comparison and route-aware ranking catalog to distillation report
 - latest: Issue #78 checked arXiv for SSI/adjacent 2026 papers and added 13 metadata-only missing records to reports/ssi_all_context_framework 2/ssi-review.json
+- latest: detailed SSI work/research report written to reports/ssi_full_work_research_report_2026-06-17.md
+- latest: token_reduction_experiment surveyed; USC-v1 identified as reusable corpus-compression layer; no API calls run
+- updated: 2026-06-17T21:42:45+0900
+- latest: Issue #79 loop_01 Track A/B updated views and logic tree summaries created under reports/ssi_5loop_codex_only/loops; no API calls run
+- latest: Issue #79 verification jq JSON passed; JSONL line validation passed; Track A/B views match except track/view_id metadata
+- updated: 2026-06-17T21:56:00+0900
+- latest: Issue #79 loop_03 Track B full-history reviews/views created under reports/ssi_5loop_codex_only/loops; no API calls run
+- latest: Issue #79 loop_03 Track B verification jq JSON passed; required fields present; 607 full + 607 compact records
+- latest: Issue #79 loop_03 Track B tokens measured with tiktoken o200k_base; full 837312; compact 601230; compact_ratio 0.718
+- updated: 2026-06-17T22:12:00+0900
+- latest: Issue #79 final loop_05 Track B files created under reports/ssi_5loop_codex_only/loops; no model API calls run
+- latest: Issue #79 final loop_05 Track B verification passed; full 607 records / 666797 tokens; compact 607 records / 489509 tokens; compact_ratio 0.734
+- latest: Issue #79 result comment posted: https://github.com/supernaiter/core-context-compiler/issues/79#issuecomment-4730568550
 done:
 - plan accepted
 - GitHub repo created
@@ -1123,3 +1137,20 @@ updated: 2026-06-11T16:23:10+0900
   - verification: file_sets/pass final_artifacts/pass main_object/pass secret_scan/pass profile_json/pass
   - weak: clipped_redacted_raw_derived_chunks; codex_synthesis_labels; no_human_holdout_score; no_external_primary_verification
   - github_issue: #74
+updated: 2026-06-17T22:35:00+0900
+- issue: #79
+- ssi_5loop_codex_only:
+  - status: done
+  - output_dir: reports/ssi_5loop_codex_only
+  - loops_completed: 5
+  - tracks: A_latest_only, B_full_history
+  - records_per_loop: 607
+  - final_selected_track: B_full_history
+  - token_efficiency_winner: A_latest_only
+  - final_view: reports/ssi_5loop_codex_only/final_view.md
+  - final_rankings: reports/ssi_5loop_codex_only/final_rankings.json
+  - final_trace_audit: reports/ssi_5loop_codex_only/final_trace_audit.json
+  - track_comparison: reports/ssi_5loop_codex_only/track_comparison_report.md
+  - verification: api_forbidden_hits/0 json_errors/0 missing_fields/0 loop05_A_607 loop05_B_607
+  - weak: no_full_paper_reread; reports_gitignored_local_artifacts
+  - github_issue: #79
