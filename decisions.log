@@ -71,3 +71,4 @@
 2026-06-11T16:52:28+0900 | Create and implement Issue #75 so masterbot serve reads knowledge_distillation_v2 profile fields; keep v1 prompt compatibility and redact local source paths before model prompt.
 2026-06-11T17:25:52+0900 | Create and implement Issue #76 so Masterbot uses Codex exec backend by default instead of requiring the old 127.0.0.1:8045 OpenAI-compatible gateway.
 2026-06-17T14:55:00+0900 | Create Issue #77 and add explicit SSI performance comparison/ranking sections because route-aware ranking must coexist with later view refinement.
+2026-06-17T15:30:00+0900 | Create Issue #78 and add missing SSI/adjacent arXiv records as metadata-only database entries; do not treat them as full-text reviewed or ranked evidence yet.

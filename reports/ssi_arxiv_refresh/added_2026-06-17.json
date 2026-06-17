@@ -1,0 +1,780 @@
+[
+  {
+    "paper_id": "arxiv_2604-19362",
+    "slug": "articulatory-movements-influence-electromagnetic-wave-transmission-through-the-vocal-tract",
+    "title": "Articulatory movements influence electromagnetic wave transmission through the vocal tract",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Remi Blandin",
+      "Martin Laabs",
+      "Rudolf von Bunau",
+      "Bryn Lloyd",
+      "Silvia Farcito",
+      "Denys Nikolayev",
+      "Gabriela Hossu",
+      "Peter Birkholz",
+      "Dirk Plettemeier"
+    ],
+    "url": "https://arxiv.org/abs/2604.19362",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2604.19362",
+    "arxiv_url": "https://arxiv.org/abs/2604.19362",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Low",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "evaluation:quantitative",
+      "modality:rf",
+      "modality:video",
+      "source:arxiv_metadata_only"
+    ],
+    "evidence_count": 0,
+    "published": "2026-04-21T11:43:19Z",
+    "updated": "2026-04-21T11:43:19Z",
+    "arxiv_categories": [
+      "physics.app-ph"
+    ],
+    "arxiv_query_hits": [
+      "all:\"silent speech interface\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: This study experimentally validates a numerical model of electromagnetic propagation through the human head during the pronunciation of different vowels, with the goal of improving our understanding of the underlying physical phenomena. A realistic finite element model was created from magnetic resonance images acquired while pronouncing the vowels /a/, /i/, and /u/. The model was validated against scattering matrix measurements obtained from two subjects whose geometries were modeled. Despite several potential sources of discrepancy, the simulations and measurements showed good qualitative agreement, confirming the validity of the approach. Similar transmission coefficient patterns were observed across subjects for the same vowels. Within the investigated frequency range of (1-6 GHz), the electric field exhibited a Mie scattering pattern. Local minima and maxima in the transmission coefficient, characterizing different articulatory configurations, were correlated with local variations in the electric field amplitude. The transmission coefficient's shape results from an interplay between resonance patterns and antenna placement, while the degree of mouth opening influences the shape of scattering modes. Although technically challenging, this numerical approach proved effective for studying electromagnetic propagation in the human head. The resulting robust numerical model and improved understanding of the underlying physics are expected to facilitate the development of radio-frequency-based silent speech interfaces."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2604-18920",
+    "slug": "comparison-of-semg-encoding-accuracy-across-speech-modes-using-articulatory-and-phoneme-features",
+    "title": "Comparison of sEMG Encoding Accuracy Across Speech Modes Using Articulatory and Phoneme Features",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Chenqian Le",
+      "Ruisi Li",
+      "Beatrice Fumagalli",
+      "Yasamin Esmaeili",
+      "Xupeng Chen",
+      "Amirhossein Khalilian-Gourtani",
+      "Tianyu He",
+      "Adeen Flinker",
+      "Yao Wang"
+    ],
+    "url": "https://arxiv.org/abs/2604.18920",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2604.18920",
+    "arxiv_url": "https://arxiv.org/abs/2604.18920",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Medium",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "body_site:skin",
+      "evaluation:quantitative",
+      "modality:emg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition"
+    ],
+    "evidence_count": 0,
+    "published": "2026-04-20T23:57:47Z",
+    "updated": "2026-04-27T02:01:31Z",
+    "arxiv_categories": [
+      "cs.SD",
+      "cs.CL"
+    ],
+    "arxiv_query_hits": [
+      "all:\"mimed speech\"",
+      "all:\"sEMG\" AND all:\"speech\"",
+      "all:\"silent speech\"",
+      "all:\"subvocal\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: We test whether Speech Articulatory Coding (SPARC) features can linearly predict surface electromyography (sEMG) envelopes across aloud, mimed, and subvocal speech in twenty-four subjects. Using elastic-net multivariate temporal response function (mTRF) with sentence-level cross-validation, SPARC yields higher prediction accuracy than phoneme one-hot representations on nearly all electrodes and in all speech modes. Aloud and mimed speech perform comparably, and subvocal speech remains above chance, indicating detectable articulatory activity. Variance partitioning shows a substantial unique contribution from SPARC and a minimal unique contribution from phoneme features. mTRF weight patterns reveal anatomically interpretable relationships between electrode sites and articulatory movements that remain consistent across modes. This study focuses on representation/encoding analysis (not end-to-end decoding) and supports SPARC as a robust and interpretable intermediate target for sEMG-based silent-speech modeling."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2603-11877",
+    "slug": "silent-speech-interfaces-in-the-era-of-large-language-models-a-comprehensive-taxonomy-and-systematic-review",
+    "title": "Silent Speech Interfaces in the Era of Large Language Models: A Comprehensive Taxonomy and Systematic Review",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Kele Xu",
+      "Yifan Wang",
+      "Ming Feng",
+      "Qisheng Xu",
+      "Wuyang Chen",
+      "Yutao Dou",
+      "Cheng Yang",
+      "Huaimin Wang"
+    ],
+    "url": "https://arxiv.org/abs/2603.11877",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2603.11877",
+    "arxiv_url": "https://arxiv.org/abs/2603.11877",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "High",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition",
+      "task:speech-reconstruction",
+      "type:review"
+    ],
+    "evidence_count": 0,
+    "published": "2026-03-12T12:52:53Z",
+    "updated": "2026-03-12T12:52:53Z",
+    "arxiv_categories": [
+      "eess.AS"
+    ],
+    "arxiv_query_hits": [
+      "all:\"silent speech interface\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Human-computer interaction has traditionally relied on the acoustic channel, a dependency that introduces systemic vulnerabilities to environmental noise, privacy constraints, and physiological speech impairments. Silent Speech Interfaces (SSIs) emerge as a transformative paradigm that bypasses the acoustic stage by decoding linguistic intent directly from the neuro-muscular-articulatory continuum. This review provides a high-level synthesis of the SSI landscape, transitioning from traditional transducer-centric analysis to a holistic intent-to-execution taxonomy. We systematically evaluate sensing modalities across four critical physiological interception points: neural oscillations, neuromuscular activation, articulatory kinematics (ultrasound/magnetometry), and pervasive active probing via acoustic or radio-frequency sensing. Critically, we analyze the current paradigm shift from heuristic signal processing to Latent Semantic Alignment. In this new era, Large Language Models (LLMs) and deep generative architectures serve as high-level linguistic priors to resolve the ``informational sparsity'' and non-stationarity of biosignals. By mapping fragmented physiological gestures into structured semantic latent spaces, modern SSI frameworks have, for the first time, approached the Word Error Rate usability threshold required for real-world deployment. We further examine the transition of SSIs from bulky laboratory instrumentation to ``invisible interfaces'' integrated into commodity-grade wearables, such as earables and smart glasses. Finally, we outline a strategic roadmap addressing the ``user-dependency paradox'' through self-supervised foundation models and define the ethical boundaries of ``neuro-security'' to protect cognitive liberty in an increasingly interfaced world."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2603-11715",
+    "slug": "affect-decoding-in-phonated-and-silent-speech-production-from-surface-emg",
+    "title": "Affect Decoding in Phonated and Silent Speech Production from Surface EMG",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Simon Pistrosch",
+      "Kleanthis Avramidis",
+      "Zhao Ren",
+      "Tiantian Feng",
+      "Jihwan Lee",
+      "Monica Gonzalez-Machorro",
+      "Anton Batliner",
+      "Tanja Schultz",
+      "Shrikanth Narayanan",
+      "Björn W. Schuller"
+    ],
+    "url": "https://arxiv.org/abs/2603.11715",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2603.11715",
+    "arxiv_url": "https://arxiv.org/abs/2603.11715",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Medium",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "body_site:skin",
+      "evaluation:quantitative",
+      "modality:emg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition",
+      "type:dataset"
+    ],
+    "evidence_count": 0,
+    "published": "2026-03-12T09:22:02Z",
+    "updated": "2026-03-19T17:12:02Z",
+    "arxiv_categories": [
+      "eess.AS",
+      "cs.AI",
+      "cs.SD"
+    ],
+    "arxiv_query_hits": [
+      "all:\"sEMG\" AND all:\"speech\"",
+      "all:\"silent speech interface\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: The expression of affect is integral to spoken communication, yet, its link to underlying articulatory execution remains unclear. Measures of articulatory muscle activity such as EMG could reveal how speech production is modulated by emotion alongside acoustic speech analyses. We investigate affect decoding from facial and neck surface electromyography (sEMG) during phonated and silent speech production. For this purpose, we introduce a dataset comprising 2,780 utterances from 12 participants across 3 tasks, on which we evaluate both intra- and inter-subject decoding using a range of features and model embeddings. Our results reveal that EMG representations reliably discriminate frustration with up to 0.845 AUC, and generalize well across articulation modes. Our ablation study further demonstrates that affective signatures are embedded in facial motor activity and persist in the absence of phonation, highlighting the potential of EMG sensing for affect-aware silent speech interfaces."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2603-04840",
+    "slug": "an-approach-to-simultaneous-acquisition-of-real-time-mri-video-eeg-and-surface-emg-for-articulatory-brain-and-muscle-act",
+    "title": "An Approach to Simultaneous Acquisition of Real-Time MRI Video, EEG, and Surface EMG for Articulatory, Brain, and Muscle Activity During Speech Production",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Jihwan Lee",
+      "Parsa Razmara",
+      "Kevin Huang",
+      "Sean Foley",
+      "Aditya Kommineni",
+      "Haley Hsu",
+      "Woojae Jeong",
+      "Prakash Kumar",
+      "Xuan Shi",
+      "Yoonjeong Lee",
+      "Tiantian Feng",
+      "Takfarinas Medani",
+      "Ye Tian",
+      "Sudarsana Reddy Kadiri",
+      "Krishna S. Nayak",
+      "Dani Byrd",
+      "Louis Goldstein",
+      "Richard M. Leahy",
+      "Shrikanth Narayanan"
+    ],
+    "url": "https://arxiv.org/abs/2603.04840",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2603.04840",
+    "arxiv_url": "https://arxiv.org/abs/2603.04840",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Medium",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:brain",
+      "body_site:lip",
+      "body_site:skin",
+      "modality:eeg",
+      "modality:emg",
+      "modality:rf",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "type:dataset"
+    ],
+    "evidence_count": 0,
+    "published": "2026-03-05T05:46:30Z",
+    "updated": "2026-03-05T05:46:30Z",
+    "arxiv_categories": [
+      "eess.AS",
+      "cs.AI",
+      "cs.CL"
+    ],
+    "arxiv_query_hits": [
+      "all:\"EEG\" AND all:\"EMG\" AND all:\"speech production\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Speech production is a complex process spanning neural planning, motor control, muscle activation, and articulatory kinematics. While the acoustic speech signal is the most accessible product of the speech production act, it does not directly reveal its causal neurophysiological substrates. We present the first simultaneous acquisition of real-time (dynamic) MRI, EEG, and surface EMG, capturing several key aspects of the speech production chain: brain signals, muscle activations, and articulatory movements. This multimodal acquisition paradigm presents substantial technical challenges, including MRI-induced electromagnetic interference and myogenic artifacts. To mitigate these, we introduce an artifact suppression pipeline tailored to this tri-modal setting. Once fully developed, this framework is poised to offer an unprecedented window into speech neuroscience and insights leading to brain-computer interface advances."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2603-02847",
+    "slug": "silentwear-an-ultra-low-power-wearable-system-for-emg-based-silent-speech-recognition",
+    "title": "SilentWear: an Ultra-Low Power Wearable System for EMG-based Silent Speech Recognition",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Giusy Spacone",
+      "Sebastian Frey",
+      "Giovanni Pollo",
+      "Alessio Burrello",
+      "Daniele Jahier Pagliari",
+      "Victor Kartsch",
+      "Andrea Cossettini",
+      "Luca Benini"
+    ],
+    "url": "https://arxiv.org/abs/2603.02847",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2603.02847",
+    "arxiv_url": "https://arxiv.org/abs/2603.02847",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "High",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "body_site:skin",
+      "evaluation:quantitative",
+      "modality:emg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition",
+      "type:dataset"
+    ],
+    "evidence_count": 0,
+    "published": "2026-03-03T10:45:02Z",
+    "updated": "2026-03-04T08:29:12Z",
+    "arxiv_categories": [
+      "eess.SP"
+    ],
+    "arxiv_query_hits": [
+      "all:\"EMG-to-Speech\"",
+      "all:\"silent speech recognition\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Detecting speech from biosignals is gaining increasing attention due to the potential to develop human-computer interfaces that are noise-robust, privacy-preserving, and scalable for both clinical applications and daily use. However, most existing approaches remain limited by insufficient wearability and the lack of edge-processing capabilities, which are essential for minimally obtrusive, responsive, and private assistive technologies. In this work, we present SilentWear, a fully wearable, textile-based neck interface for EMG signal acquisition and processing. Powered by BioGAP-Ultra, the system enables end-to-end data acquisition from 14 differential channels and on-device speech recognition. SilentWear is coupled with SpeechNet, a lightweight 15k-parameter CNN architecture specifically tailored for EMG-based speech decoding, achieving an average cross-validated accuracy of 84.8$\\pm$4.6% and 77.5$\\pm$6.6% for vocalized and silent speech, respectively, over eight representative human-machine interaction commands collected over multiple days. We evaluate robustness to repositioning induced by multi-day use. In an inter-session setting, the system achieves average accuracies of 71.1$\\pm$8.3% and 59.3\\pm2.2% for vocalized and silent speech, respectively. To mitigate performance degradation due to repositioning, we propose an incremental fine-tuning strategy, demonstrating more than 10% accuracy recovery with less than 10 minutes of additional user data. Finally, we demonstrate end-to-end real-time on-device speech recognition on a commercial multi-core microcontroller unit (MCU), achieving an energy consumption of 63.9$μ$J per inference with a latency of 2.47 ms. With a total power consumption of 20.5mW for acquisition, inference, and wireless transmission of results, SilentWear enables continuous operation for more than 27 hours."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2603-12279",
+    "slug": "toward-robust-reproducible-and-widely-accessible-intracranial-language-brain-computer-interfaces-a-comprehensive-review",
+    "title": "Toward Robust, Reproducible, and Widely Accessible Intracranial Language Brain-Computer Interfaces: A Comprehensive Review of Neural Mechanisms, Hardware, Algorithms, Evaluation, Clinical Pathways and Future Directions",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Dongyi He",
+      "Wai Ting Siok",
+      "Nizhuan Wang"
+    ],
+    "url": "https://arxiv.org/abs/2603.12279",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2603.12279",
+    "arxiv_url": "https://arxiv.org/abs/2603.12279",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Low",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:brain",
+      "body_site:lip",
+      "evaluation:quantitative",
+      "modality:eeg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition",
+      "task:speech-reconstruction",
+      "type:review"
+    ],
+    "evidence_count": 0,
+    "published": "2026-03-03T03:30:05Z",
+    "updated": "2026-03-16T07:23:11Z",
+    "arxiv_categories": [
+      "q-bio.NC"
+    ],
+    "arxiv_query_hits": [
+      "all:\"covert speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Intracranial language brain-computer interfaces (BCIs) are a promising route for restoring communication in people with severe motor and speech impairments, but clinical translation remains limited by fragmented evidence and unresolved design trade-offs across neuroscience, hardware, algorithm, evaluation, and clinical deployment. This review synthesizes progress in neural mechanisms of overt, mimed, and imagined speech; decision-oriented hardware comparisons of microelectrode array (MEA), electrocorticography (ECoG), and stereotactic electroencephalography (SEEG) recording modalities; experiment design for cross-subject and multilingual generalization; and neural decoding advances spanning sequence models, transformers, articulatory intermediates, and language-prior-assisted frameworks. We highlight persistent bottlenecks, including weak cross-subject transfer, long-term non-stationarity and recalibration burden, heterogeneous and non-comparable evaluation practices, limited naturalistic expressivity (especially for tonal/logosyllabic languages), and low signal-to-noise ratio (SNR) of neural activity in covert speech decoding. Our contributions are threefold: (1) an end-to-end, decision-oriented synthesis linking neural representations to recording choices, experimental design, decoding model architectures, and translational constraints; (2) a structured framework organized around five coupled design questions, together with a unified evaluation framework and a cross-language/cross-task benchmark template integrating objective, perceptual, expressive, conversational, and longitudinal metrics; and (3) user-centered translational guidance covering agency-preserving shared control, verifiable performance priorities, and scenario-specific minimum viable system (MVP) profiles for reliability-first home communication versus fidelity-first conversational speech restoration."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2602-22597",
+    "slug": "relating-the-neural-representations-of-vocalized-mimed-and-imagined-speech",
+    "title": "Relating the Neural Representations of Vocalized, Mimed, and Imagined Speech",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Maryam Maghsoudi",
+      "Rupesh Chillale",
+      "Shihab A. Shamma"
+    ],
+    "url": "https://arxiv.org/abs/2602.22597",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2602.22597",
+    "arxiv_url": "https://arxiv.org/abs/2602.22597",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Low",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:brain",
+      "modality:eeg",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition"
+    ],
+    "evidence_count": 0,
+    "published": "2026-02-26T04:01:09Z",
+    "updated": "2026-02-26T04:01:09Z",
+    "arxiv_categories": [
+      "cs.SD",
+      "eess.AS",
+      "eess.SP"
+    ],
+    "arxiv_query_hits": [
+      "all:\"imagined speech\" AND (cat:cs.CL OR cat:eess.AS OR cat:cs.HC OR cat:cs.LG OR cat:cs.SD)"
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: We investigated the relationship among neural representations of vocalized, mimed, and imagined speech recorded using publicly available stereotactic EEG recordings. Most prior studies have focused on decoding speech responses within each condition separately. Here, instead, we explore how responses across conditions relate by training linear spectrogram reconstruction models for each condition and evaluate their generalization across conditions. We demonstrate that linear decoders trained on one condition generally transfer successfully to others, implying shared speech representations. This commonality was assessed with stimulus-level discriminability by performing a rank-based analysis demonstrating preservation of stimulus-specific structure in both within- and across-conditions. Finally, we compared linear reconstructions to those from a nonlinear neural network. While both exhibited cross-condition transfer, linear models achieve superior stimulus-level discriminability."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2602-06460",
+    "slug": "emg-to-speech-with-fewer-channels",
+    "title": "EMG-to-Speech with Fewer Channels",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Injune Hwang",
+      "Jaejun Lee",
+      "Kyogu Lee"
+    ],
+    "url": "https://arxiv.org/abs/2602.06460",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2602.06460",
+    "arxiv_url": "https://arxiv.org/abs/2602.06460",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "High",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "body_site:skin",
+      "evaluation:quantitative",
+      "modality:emg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-reconstruction"
+    ],
+    "evidence_count": 0,
+    "published": "2026-02-06T07:43:59Z",
+    "updated": "2026-02-06T07:43:59Z",
+    "arxiv_categories": [
+      "cs.SD"
+    ],
+    "arxiv_query_hits": [
+      "all:\"EMG-to-Speech\"",
+      "all:\"silent speech interface\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Surface electromyography (EMG) is a promising modality for silent speech interfaces, but its effectiveness depends heavily on sensor placement and channel availability. In this work, we investigate the contribution of individual and combined EMG channels to speech reconstruction performance. Our findings reveal that while certain EMG channels are individually more informative, the highest performance arises from subsets that leverage complementary relationships among channels. We also analyzed phoneme classification accuracy under channel ablations and observed interpretable patterns reflecting the anatomical roles of the underlying muscles. To address performance degradation from channel reduction, we pretrained models on full 8-channel data using random channel dropout and fine-tuned them on reduced-channel subsets. Fine-tuning consistently outperformed training from scratch for 4 - 6 channel settings, with the best dropout strategy depending on the number of channels. These results suggest that performance degradation from sensor reduction can be mitigated through pretraining and channel-aware design, supporting the development of lightweight and practical EMG-based silent speech systems."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2602-01879",
+    "slug": "speaking-without-sound-multi-speaker-silent-speech-voicing-with-facial-inputs-only",
+    "title": "Speaking Without Sound: Multi-speaker Silent Speech Voicing with Facial Inputs Only",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Jaejun Lee",
+      "Yoori Oh",
+      "Kyogu Lee"
+    ],
+    "url": "https://arxiv.org/abs/2602.01879",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2602.01879",
+    "arxiv_url": "https://arxiv.org/abs/2602.01879",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "High",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "body_site:skin",
+      "modality:emg",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-reconstruction"
+    ],
+    "evidence_count": 0,
+    "published": "2026-02-02T09:51:30Z",
+    "updated": "2026-02-02T09:51:30Z",
+    "arxiv_categories": [
+      "cs.SD"
+    ],
+    "arxiv_query_hits": [
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: In this paper, we introduce a novel framework for generating multi-speaker speech without relying on any audible inputs. Our approach leverages silent electromyography (EMG) signals to capture linguistic content, while facial images are used to match with the vocal identity of the target speaker. Notably, we present a pitch-disentangled content embedding that enhances the extraction of linguistic content from EMG signals. Extensive analysis demonstrates that our method can generate multi-speaker speech without any audible inputs and confirms the effectiveness of the proposed pitch-disentanglement approach."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2602-01247",
+    "slug": "mechanistic-interpretability-of-brain-to-speech-models-across-speech-modes",
+    "title": "Mechanistic Interpretability of Brain-to-Speech Models Across Speech Modes",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Maryam Maghsoudi",
+      "Ayushi Mishra"
+    ],
+    "url": "https://arxiv.org/abs/2602.01247",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2602.01247",
+    "arxiv_url": "https://arxiv.org/abs/2602.01247",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Low",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "source:arxiv_metadata_only",
+      "task:speech-recognition",
+      "task:speech-reconstruction"
+    ],
+    "evidence_count": 0,
+    "published": "2026-02-01T14:14:40Z",
+    "updated": "2026-02-01T14:14:40Z",
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.AI"
+    ],
+    "arxiv_query_hits": [
+      "all:\"imagined speech\" AND (cat:cs.CL OR cat:eess.AS OR cat:cs.HC OR cat:cs.LG OR cat:cs.SD)"
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Brain-to-speech decoding models demonstrate robust performance in vocalized, mimed, and imagined speech; yet, the fundamental mechanisms via which these models capture and transmit information across different speech modalities are less explored. In this work, we use mechanistic interpretability to causally investigate the internal representations of a neural speech decoder. We perform cross-mode activation patching of internal activations across speech modes, and use tri-modal interpolation to examine whether speech representations vary discretely or continuously. We use coarse-to-fine causal tracing and causal scrubbing to find localized causal structure, allowing us to find internal subspaces that are sufficient for cross-mode transfer. In order to determine how finely distributed these effects are within layers, we perform neuron-level activation patching. We discover that small but not distributed subsets of neurons, rather than isolated units, affect the cross-mode transfer. Our results show that speech modes lie on a shared continuous causal manifold, and cross-mode transfer is mediated by compact, layer-specific subspaces rather than diffuse activity. Together, our findings give a causal explanation for how speech modality information is organized and used in brain-to-speech decoding models, revealing hierarchical and direction-dependent representational structure across speech modes."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2601-18177",
+    "slug": "lip-siri-contactless-open-sentence-silent-speech-with-wi-fi-backscatter",
+    "title": "Lip-Siri: Contactless Open-Sentence Silent Speech with Wi-Fi Backscatter",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Ye Tian",
+      "Haohua Du",
+      "Chao Gu",
+      "Junyang Zhang",
+      "Shanyue Wang",
+      "Hao Zhou",
+      "Jiahui Hou",
+      "Xiang-Yang Li"
+    ],
+    "url": "https://arxiv.org/abs/2601.18177",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2601.18177",
+    "arxiv_url": "https://arxiv.org/abs/2601.18177",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "High",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:lip",
+      "evaluation:quantitative",
+      "modality:rf",
+      "modality:video",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition"
+    ],
+    "evidence_count": 0,
+    "published": "2026-01-26T05:55:23Z",
+    "updated": "2026-01-26T05:55:23Z",
+    "arxiv_categories": [
+      "cs.HC"
+    ],
+    "arxiv_query_hits": [
+      "all:\"silent speech interface\"",
+      "all:\"silent speech\""
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Silent speech interfaces (SSIs) enable silent interaction in noise-sensitive or privacy-sensitive settings. However, existing SSIs face practical deployment trade-offs among privacy, user experience, and energy consumption, and most remain limited to closed-set recognition over small, pre-defined vocabularies of words or sentences, which restricts real-world expressiveness. In this paper, we present Lip-Siri, to the best of our knowledge, the first Wi-Fi backscatter--based SSI that supports open-vocabulary sentence recognition via lexicon-guided subword decoding. Lip-Siri designs a frequency-shifted backscatter tag to isolate tag-modulated reflections and suppress interference from non-target motions, enabling reliable extraction of lip-motion traces from ubiquitous Wi-Fi signals. We then segment continuous traces into lip-motion units, cluster them, learn robust unit representations via cluster-based self-supervision, and finally propose a lexicon-guided Transformer encoder--decoder with beam search to decode variable-length sentence sequences. We implement an end-to-end prototype and evaluate it with 15 participants on 340 sentences and 3,398 words across multiple scenarios. Lip-Siri achieves 85.61% accuracy on word prediction and a WER of 36.87% on continuous sentence recognition, approaching the performance of representative vision-based lip-reading systems."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  },
+  {
+    "paper_id": "arxiv_2601-15909",
+    "slug": "transfer-learning-from-imagenet-for-meg-based-decoding-of-imagined-speech",
+    "title": "Transfer Learning from ImageNet for MEG-Based Decoding of Imagined Speech",
+    "year": 2026,
+    "venue": "arXiv",
+    "authors": [
+      "Soufiane Jhilal",
+      "Stéphanie Martin",
+      "Anne-Lise Giraud"
+    ],
+    "url": "https://arxiv.org/abs/2601.15909",
+    "doi": "",
+    "doi_url": "",
+    "arxiv_id": "2601.15909",
+    "arxiv_url": "https://arxiv.org/abs/2601.15909",
+    "review_state": "arxiv_metadata_only",
+    "review_priority": "Low",
+    "review_confidence": "Low until full text review",
+    "review_basis": "arxiv_metadata_only",
+    "source_coverage": "metadata_only",
+    "tags": [
+      "body_site:brain",
+      "evaluation:quantitative",
+      "modality:meg",
+      "source:arxiv_metadata_only",
+      "task:speech-recognition"
+    ],
+    "evidence_count": 0,
+    "published": "2026-01-22T12:38:20Z",
+    "updated": "2026-01-22T12:38:20Z",
+    "arxiv_categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CV"
+    ],
+    "arxiv_query_hits": [
+      "all:\"imagined speech\" AND (cat:cs.CL OR cat:eess.AS OR cat:cs.HC OR cat:cs.LG OR cat:cs.SD)"
+    ],
+    "expert_take_short": "Metadata-only SSI candidate. Needs full-text review before ranking or distillation use.",
+    "expert_take_long": "Added from arXiv API search as a missing 2026 SSI or SSI-adjacent record. The abstract suggests relevance, but no full-text expert judgment has been performed yet.",
+    "expert_true_value": "Unknown until full-text review.",
+    "canon_before": "",
+    "delta_from_canon": "",
+    "position_in_field": "unreviewed_candidate",
+    "evidence": [
+      "arXiv abstract: Non-invasive decoding of imagined speech remains challenging due to weak, distributed signals and limited labeled data. Our paper introduces an image-based approach that transforms magnetoencephalography (MEG) signals into time-frequency representations compatible with pretrained vision models. MEG data from 21 participants performing imagined speech tasks were projected into three spatial scalogram mixtures via a learnable sensor-space convolution, producing compact image-like inputs for ImageNet-pretrained vision architectures. These models outperformed classical and non-pretrained models, achieving up to 90.4% balanced accuracy for imagery vs. silence, 81.0% vs. silent reading, and 60.6% for vowel decoding. Cross-subject evaluation confirmed that pretrained models capture shared neural representations, and temporal analyses localized discriminative information to imagery-locked intervals. These findings show that pretrained vision models applied to image-based MEG representations can effectively capture the structure of imagined speech in non-invasive neural signals."
+    ],
+    "limits": [
+      "metadata-only entry",
+      "not yet included in performance ranking",
+      "not yet compressed from full text"
+    ],
+    "added_at": "2026-06-17T15:30:00+09:00"
+  }
+]

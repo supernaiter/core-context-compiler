@@ -21,6 +21,7 @@ updated: 2026-06-11T16:52:28+0900
 updated: 2026-06-11T17:25:52+0900
 updated: 2026-06-17T14:44:07+0900
 updated: 2026-06-17T14:55:00+0900
+updated: 2026-06-17T15:30:00+0900
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -57,6 +58,7 @@ status:
 - latest: masterbot pid 95370
 - latest: SSI distillation process report and view catalog written to reports/ssi_distillation_report/ssi_distillation_process_report_and_view_catalog.md
 - latest: Issue #77 added SSI performance comparison and route-aware ranking catalog to distillation report
+- latest: Issue #78 checked arXiv for SSI/adjacent 2026 papers and added 13 metadata-only missing records to reports/ssi_all_context_framework 2/ssi-review.json
 done:
 - plan accepted
 - GitHub repo created
