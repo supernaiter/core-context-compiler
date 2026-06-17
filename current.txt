@@ -19,6 +19,8 @@ updated: 2026-06-11T13:53:56+09:00
 updated: 2026-06-11T13:56:05+09:00
 updated: 2026-06-11T16:52:28+0900
 updated: 2026-06-11T17:25:52+0900
+updated: 2026-06-17T14:44:07+0900
+updated: 2026-06-17T14:55:00+0900
 goal: Complete v1.0 Core Context Compiler plan
 repo:
 - local: /Users/naoki/Documents/memory_compiler
@@ -53,6 +55,8 @@ status:
 - latest: Issue #76 masterbot default backend changed to codex-exec
 - latest: Issue #76 chat smoke passed via Codex backend
 - latest: masterbot pid 95370
+- latest: SSI distillation process report and view catalog written to reports/ssi_distillation_report/ssi_distillation_process_report_and_view_catalog.md
+- latest: Issue #77 added SSI performance comparison and route-aware ranking catalog to distillation report
 done:
 - plan accepted
 - GitHub repo created
